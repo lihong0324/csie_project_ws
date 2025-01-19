@@ -1,0 +1,81 @@
+CMake Deprecation Warning at CMakeLists.txt:4 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+CMake Warning (dev) at /Users/lihong/miniconda3/envs/ros2/lib/cmake/gazebo/gazebo-config.cmake:187 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  CMakeLists.txt:23 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    Python3_NumPy_INCLUDE_DIR
+
+
+In file included from /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_gazebo/src/turtlebot3_drive.cpp:17:
+In file included from /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_gazebo/include/turtlebot3_gazebo/turtlebot3_drive.hpp:22:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/rclcpp.hpp:155:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executors.hpp:21:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executor.hpp:37:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executor_options.hpp:20:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/memory_strategies.hpp:18:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/memory_strategy.hpp:25:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_executable.hpp:20:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/callback_group.hpp:29:
+In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/subscription_base.hpp:32:
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_subscription_callback.hpp:391:7: warning: 'set_deprecated<sensor_msgs::msg::LaserScan_<std::allocator<void>>>' is deprecated: use 'void(std::shared_ptr<const MessageT>)' instead [-Wdeprecated-declarations]
+  391 |       set_deprecated(static_cast<typename scbth::callback_type>(callback));
+      |       ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/subscription_factory.hpp:94:29: note: in instantiation of function template specialization 'rclcpp::AnySubscriptionCallback<sensor_msgs::msg::LaserScan_<std::allocator<void>>>::set<std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>>' requested here
+   94 |   any_subscription_callback.set(std::forward<CallbackT>(callback));
+      |                             ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/create_subscription.hpp:122:26: note: in instantiation of function template specialization 'rclcpp::create_subscription_factory<sensor_msgs::msg::LaserScan_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, sensor_msgs::msg::LaserScan_<std::allocator<void>>>' requested here
+  122 |   auto factory = rclcpp::create_subscription_factory<MessageT>(
+      |                          ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/create_subscription.hpp:190:26: note: in instantiation of function template specialization 'rclcpp::detail::create_subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, rclcpp::Node, rclcpp::Node, sensor_msgs::msg::LaserScan_<std::allocator<void>>>' requested here
+  190 |   return rclcpp::detail::create_subscription<
+      |                          ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/node_impl.hpp:99:18: note: in instantiation of function template specialization 'rclcpp::create_subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, rclcpp::Node>' requested here
+   99 |   return rclcpp::create_subscription<MessageT>(
+      |                  ^
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_gazebo/src/turtlebot3_drive.cpp:45:21: note: in instantiation of function template specialization 'rclcpp::Node::create_subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<sensor_msgs::msg::LaserScan_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<sensor_msgs::msg::LaserScan_<std::allocator<void>>>>' requested here
+   45 |   scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+      |                     ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_subscription_callback.hpp:405:5: note: 'set_deprecated<sensor_msgs::msg::LaserScan_<std::allocator<void>>>' has been explicitly marked deprecated here
+  405 |   [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
+      |     ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_subscription_callback.hpp:391:7: warning: 'set_deprecated<nav_msgs::msg::Odometry_<std::allocator<void>>>' is deprecated: use 'void(std::shared_ptr<const MessageT>)' instead [-Wdeprecated-declarations]
+  391 |       set_deprecated(static_cast<typename scbth::callback_type>(callback));
+      |       ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/subscription_factory.hpp:94:29: note: in instantiation of function template specialization 'rclcpp::AnySubscriptionCallback<nav_msgs::msg::Odometry_<std::allocator<void>>>::set<std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<nav_msgs::msg::Odometry_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>>' requested here
+   94 |   any_subscription_callback.set(std::forward<CallbackT>(callback));
+      |                             ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/create_subscription.hpp:122:26: note: in instantiation of function template specialization 'rclcpp::create_subscription_factory<nav_msgs::msg::Odometry_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<nav_msgs::msg::Odometry_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<nav_msgs::msg::Odometry_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<nav_msgs::msg::Odometry_<std::allocator<void>>>, nav_msgs::msg::Odometry_<std::allocator<void>>>' requested here
+  122 |   auto factory = rclcpp::create_subscription_factory<MessageT>(
+      |                          ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/create_subscription.hpp:190:26: note: in instantiation of function template specialization 'rclcpp::detail::create_subscription<nav_msgs::msg::Odometry_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<nav_msgs::msg::Odometry_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<nav_msgs::msg::Odometry_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<nav_msgs::msg::Odometry_<std::allocator<void>>>, rclcpp::Node, rclcpp::Node, nav_msgs::msg::Odometry_<std::allocator<void>>>' requested here
+  190 |   return rclcpp::detail::create_subscription<
+      |                          ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/node_impl.hpp:99:18: note: in instantiation of function template specialization 'rclcpp::create_subscription<nav_msgs::msg::Odometry_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<nav_msgs::msg::Odometry_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<nav_msgs::msg::Odometry_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<nav_msgs::msg::Odometry_<std::allocator<void>>>, rclcpp::Node>' requested here
+   99 |   return rclcpp::create_subscription<MessageT>(
+      |                  ^
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_gazebo/src/turtlebot3_drive.cpp:52:21: note: in instantiation of function template specialization 'rclcpp::Node::create_subscription<nav_msgs::msg::Odometry_<std::allocator<void>>, std::__bind<void (Turtlebot3Drive::*)(std::shared_ptr<nav_msgs::msg::Odometry_<std::allocator<void>>>), Turtlebot3Drive *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<nav_msgs::msg::Odometry_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<nav_msgs::msg::Odometry_<std::allocator<void>>>>' requested here
+   52 |   odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+      |                     ^
+/Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_subscription_callback.hpp:405:5: note: 'set_deprecated<nav_msgs::msg::Odometry_<std::allocator<void>>>' has been explicitly marked deprecated here
+  405 |   [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
+      |     ^
+2 warnings generated.
+/Users/lihong/miniconda3/envs/ros2/bin/install_name_tool: warning: changes being made to the file will invalidate the code signature in: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/lib/turtlebot3_gazebo/turtlebot3_drive
+[cctools-port]: generating fake signature for '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/lib/turtlebot3_gazebo/turtlebot3_drive'

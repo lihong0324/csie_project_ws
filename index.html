@@ -22,7 +22,7 @@
 
         <script>
             // 初始化 ROS 物件來通過 WebSocket 連接到 Rosbridge 伺服器
-            const ros = new ROSLIB.Ros({ url: "ws://192.168.137.214:9090" });
+            const ros = new ROSLIB.Ros({ url: "ws://192.168.0.100:9090" });
 
             // 當與 Rosbridge 成功連接時，更新狀態顯示
             ros.on("connection", () => {

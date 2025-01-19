@@ -1,0 +1,59 @@
+[0.033s] Invoking command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car': CONDA_PROMPT_MODIFIER=(ros2) SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car -DCMAKE_INSTALL_PREFIX=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car
+[0.486s] -- The C compiler identification is Clang 16.0.6
+[0.582s] -- The CXX compiler identification is Clang 16.0.6
+[0.618s] -- Detecting C compiler ABI info
+[0.789s] -- Detecting C compiler ABI info - done
+[0.792s] -- Check for working C compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang - skipped
+[0.793s] -- Detecting C compile features
+[0.793s] -- Detecting C compile features - done
+[0.822s] -- Detecting CXX compiler ABI info
+[0.984s] -- Detecting CXX compiler ABI info - done
+[0.987s] -- Check for working CXX compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang++ - skipped
+[0.987s] -- Detecting CXX compile features
+[0.988s] -- Detecting CXX compile features - done
+[1.020s] -- Found ament_cmake: 1.3.7 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake/cmake)
+[1.608s] -- Found Python3: /opt/homebrew/Frameworks/Python.framework/Versions/3.12/bin/python3.12 (found version "3.12.5") found components: Interpreter 
+[1.833s] -- Found rclcpp: 16.0.8 (/Users/lihong/miniconda3/envs/ros2/share/rclcpp/cmake)
+[1.965s] -- Found rosidl_generator_c: 3.1.5 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_c/cmake)
+[1.986s] -- Found rosidl_adapter: 3.1.5 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_adapter/cmake)
+[2.011s] -- Found rosidl_generator_cpp: 3.1.5 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_cpp/cmake)
+[2.043s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[2.087s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.283s] -- Checking for module 'yaml-0.1'
+[2.395s] --   Found yaml-0.1, version 0.2.5
+[2.724s] -- Found rmw_implementation_cmake: 6.1.1 (/Users/lihong/miniconda3/envs/ros2/share/rmw_implementation_cmake/cmake)
+[2.736s] -- Found rmw_cyclonedds_cpp: 1.3.4 (/Users/lihong/miniconda3/envs/ros2/share/rmw_cyclonedds_cpp/cmake)
+[2.810s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[2.839s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[2.999s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[3.000s] -- Found Threads: TRUE  
+[3.112s] -- Found std_msgs: 4.2.3 (/Users/lihong/miniconda3/envs/ros2/share/std_msgs/cmake)
+[3.148s] -- Found sensor_msgs: 4.2.3 (/Users/lihong/miniconda3/envs/ros2/share/sensor_msgs/cmake)
+[3.302s] -- Configuring done (3.2s)
+[3.324s] -- Generating done (0.0s)
+[3.327s] -- Build files have been written to: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car
+[3.330s] Invoked command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car' returned '0': CONDA_PROMPT_MODIFIER=(ros2) SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car -DCMAKE_INSTALL_PREFIX=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car
+[3.332s] Invoking command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car': CONDA_PROMPT_MODIFIER=(ros2) SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --build /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car -- -j8 -l8
+[3.382s] Invoked command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car' returned '0': CONDA_PROMPT_MODIFIER=(ros2) SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --build /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car -- -j8 -l8
+[3.450s] Invoking command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car': CONDA_PROMPT_MODIFIER=(ros2) SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --install /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car
+[3.459s] -- Install configuration: ""
+[3.460s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/lib/my_robot_car/ball_detector.py
+[3.461s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/lib/my_robot_car/launcher_controller.py
+[3.461s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/launch
+[3.461s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/launch/gazebo.launch.py
+[3.462s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/ament_index/resource_index/package_run_dependencies/my_robot_car
+[3.462s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/ament_index/resource_index/parent_prefix_path/my_robot_car
+[3.462s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/environment/ament_prefix_path.sh
+[3.462s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/environment/ament_prefix_path.dsv
+[3.462s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/environment/path.sh
+[3.463s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/environment/path.dsv
+[3.463s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/local_setup.bash
+[3.463s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/local_setup.sh
+[3.463s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/local_setup.zsh
+[3.463s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/local_setup.dsv
+[3.463s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/package.dsv
+[3.464s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/ament_index/resource_index/packages/my_robot_car
+[3.464s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/cmake/my_robot_carConfig.cmake
+[3.464s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/cmake/my_robot_carConfig-version.cmake
+[3.464s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/install/my_robot_car/share/my_robot_car/package.xml
+[3.465s] Invoked command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car' returned '0': CONDA_PROMPT_MODIFIER=(ros2) SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --install /Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/build/my_robot_car

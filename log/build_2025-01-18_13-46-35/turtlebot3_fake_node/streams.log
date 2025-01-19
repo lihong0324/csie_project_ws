@@ -1,0 +1,128 @@
+[0.016s] Invoking command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node': AMENT_PREFIX_PATH=${AMENT_PREFIX_PATH}/csie_project_ws/install/turtlebot3_msgs:/Users/lihong/miniconda3/envs/ros2 CMAKE_PREFIX_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs${CMAKE_PREFIX_PATH} CONDA_PROMPT_MODIFIER=(ros2) DYLD_LIBRARY_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib PYTHONPATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib/python3.11/site-packages:${PYTHONPATH} SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_fake_node -DPython3_EXECUTABLE=/Users/lihong/miniconda3/envs/ros2/bin/python3.11 -DPython3_NumPy_INCLUDE_DIR=/Users/lihong/miniconda3/envs/ros2/lib/python3.11/site-packages/numpy/core/include -DCMAKE_INSTALL_PREFIX=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node
+[0.029s] CMake Deprecation Warning at CMakeLists.txt:4 (cmake_minimum_required):
+[0.029s]   Compatibility with CMake < 3.10 will be removed from a future version of
+[0.029s]   CMake.
+[0.029s] 
+[0.029s]   Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+[0.029s]   to tell CMake that the project requires at least <min> but has been updated
+[0.029s]   to work with policies introduced by <max> or earlier.
+[0.029s] 
+[0.029s] 
+[0.140s] -- The C compiler identification is Clang 18.1.8
+[0.286s] -- The CXX compiler identification is Clang 18.1.8
+[0.293s] -- Detecting C compiler ABI info
+[0.459s] -- Detecting C compiler ABI info - done
+[0.465s] -- Check for working C compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang - skipped
+[0.465s] -- Detecting C compile features
+[0.466s] -- Detecting C compile features - done
+[0.470s] -- Detecting CXX compiler ABI info
+[0.639s] -- Detecting CXX compiler ABI info - done
+[0.645s] -- Check for working CXX compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang++ - skipped
+[0.645s] -- Detecting CXX compile features
+[0.645s] -- Detecting CXX compile features - done
+[0.655s] -- Found ament_cmake: 1.3.11 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake/cmake)
+[0.779s] -- Found Python3: /Users/lihong/miniconda3/envs/ros2/bin/python3.11 (found version "3.11.11") found components: Interpreter
+[0.959s] -- Found geometry_msgs: 4.2.4 (/Users/lihong/miniconda3/envs/ros2/share/geometry_msgs/cmake)
+[1.061s] -- Found rosidl_generator_c: 3.1.6 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_c/cmake)
+[1.080s] -- Found rosidl_adapter: 3.1.6 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_adapter/cmake)
+[1.103s] -- Found rosidl_generator_cpp: 3.1.6 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_cpp/cmake)
+[1.130s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.171s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.240s] -- Found nav_msgs: 4.2.4 (/Users/lihong/miniconda3/envs/ros2/share/nav_msgs/cmake)
+[1.267s] -- Found rclcpp: 16.0.11 (/Users/lihong/miniconda3/envs/ros2/share/rclcpp/cmake)
+[1.404s] -- Checking for module 'yaml-0.1'
+[1.525s] --   Found yaml-0.1, version 0.2.5
+[2.091s] -- Found rmw_implementation_cmake: 6.1.2 (/Users/lihong/miniconda3/envs/ros2/share/rmw_implementation_cmake/cmake)
+[2.109s] -- Found rmw_fastrtps_cpp: 6.2.7 (/Users/lihong/miniconda3/envs/ros2/share/rmw_fastrtps_cpp/cmake)
+[3.267s] -- Found OpenSSL: /opt/homebrew/opt/openssl@3/lib/libcrypto.dylib (found version "3.4.0")
+[3.450s] -- Found FastRTPS: /Users/lihong/miniconda3/envs/ros2/include
+[3.587s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[3.620s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[3.881s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[3.882s] -- Found Threads: TRUE
+[3.968s] -- Found sensor_msgs: 4.2.4 (/Users/lihong/miniconda3/envs/ros2/share/sensor_msgs/cmake)
+[4.007s] -- Found tf2: 0.25.10 (/Users/lihong/miniconda3/envs/ros2/share/tf2/cmake)
+[4.045s] -- Found tf2_msgs: 0.25.10 (/Users/lihong/miniconda3/envs/ros2/share/tf2_msgs/cmake)
+[4.142s] -- Found turtlebot3_msgs: 2.2.3 (/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/share/turtlebot3_msgs/cmake)
+[4.265s] -- Configuring done (4.2s)
+[4.342s] -- Generating done (0.1s)
+[4.342s] CMake Warning:
+[4.342s]   Manually-specified variables were not used by the project:
+[4.342s] 
+[4.342s]     Python3_NumPy_INCLUDE_DIR
+[4.342s] 
+[4.342s] 
+[4.343s] -- Build files have been written to: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node
+[4.352s] Invoked command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node' returned '0': AMENT_PREFIX_PATH=${AMENT_PREFIX_PATH}/csie_project_ws/install/turtlebot3_msgs:/Users/lihong/miniconda3/envs/ros2 CMAKE_PREFIX_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs${CMAKE_PREFIX_PATH} CONDA_PROMPT_MODIFIER=(ros2) DYLD_LIBRARY_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib PYTHONPATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib/python3.11/site-packages:${PYTHONPATH} SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_fake_node -DPython3_EXECUTABLE=/Users/lihong/miniconda3/envs/ros2/bin/python3.11 -DPython3_NumPy_INCLUDE_DIR=/Users/lihong/miniconda3/envs/ros2/lib/python3.11/site-packages/numpy/core/include -DCMAKE_INSTALL_PREFIX=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node
+[4.354s] Invoking command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node': AMENT_PREFIX_PATH=${AMENT_PREFIX_PATH}/csie_project_ws/install/turtlebot3_msgs:/Users/lihong/miniconda3/envs/ros2 CMAKE_PREFIX_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs${CMAKE_PREFIX_PATH} CONDA_PROMPT_MODIFIER=(ros2) DYLD_LIBRARY_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib PYTHONPATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib/python3.11/site-packages:${PYTHONPATH} SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --build /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node -- -j8 -l8
+[4.501s] [ 50%] Building CXX object CMakeFiles/turtlebot3_fake_node.dir/src/turtlebot3_fake_node.cpp.o
+[7.439s] In file included from /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_fake_node/src/turtlebot3_fake_node.cpp:17:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_fake_node/include/turtlebot3_fake_node/turtlebot3_fake_node.hpp:21:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/rclcpp.hpp:155:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executors.hpp:21:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executor.hpp:37:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/executor_options.hpp:20:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/memory_strategies.hpp:18:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/memory_strategy.hpp:25:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_executable.hpp:20:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/callback_group.hpp:29:
+[7.440s] In file included from /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/subscription_base.hpp:32:
+[7.441s] /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_subscription_callback.hpp:391:7: warning: 'set_deprecated<geometry_msgs::msg::Twist_<std::allocator<void>>>' is deprecated: use 'void(std::shared_ptr<const MessageT>)' instead [-Wdeprecated-declarations]
+[7.441s]   391 |       set_deprecated(static_cast<typename scbth::callback_type>(callback));
+[7.441s]       |       ^
+[7.441s] /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/subscription_factory.hpp:94:29: note: in instantiation of function template specialization 'rclcpp::AnySubscriptionCallback<geometry_msgs::msg::Twist_<std::allocator<void>>>::set<std::__bind<void (Turtlebot3Fake::*)(std::shared_ptr<geometry_msgs::msg::Twist_<std::allocator<void>>>), Turtlebot3Fake *, const std::placeholders::__ph<1> &>>' requested here
+[7.441s]    94 |   any_subscription_callback.set(std::forward<CallbackT>(callback));
+[7.441s]       |                             ^
+[7.441s] /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/create_subscription.hpp:122:26: note: in instantiation of function template specialization 'rclcpp::create_subscription_factory<geometry_msgs::msg::Twist_<std::allocator<void>>, std::__bind<void (Turtlebot3Fake::*)(std::shared_ptr<geometry_msgs::msg::Twist_<std::allocator<void>>>), Turtlebot3Fake *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<geometry_msgs::msg::Twist_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<geometry_msgs::msg::Twist_<std::allocator<void>>>, geometry_msgs::msg::Twist_<std::allocator<void>>>' requested here
+[7.441s]   122 |   auto factory = rclcpp::create_subscription_factory<MessageT>(
+[7.441s]       |                          ^
+[7.441s] /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/create_subscription.hpp:190:26: note: in instantiation of function template specialization 'rclcpp::detail::create_subscription<geometry_msgs::msg::Twist_<std::allocator<void>>, std::__bind<void (Turtlebot3Fake::*)(std::shared_ptr<geometry_msgs::msg::Twist_<std::allocator<void>>>), Turtlebot3Fake *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<geometry_msgs::msg::Twist_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<geometry_msgs::msg::Twist_<std::allocator<void>>>, rclcpp::Node, rclcpp::Node, geometry_msgs::msg::Twist_<std::allocator<void>>>' requested here
+[7.441s]   190 |   return rclcpp::detail::create_subscription<
+[7.441s]       |                          ^
+[7.441s] /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/node_impl.hpp:99:18: note: in instantiation of function template specialization 'rclcpp::create_subscription<geometry_msgs::msg::Twist_<std::allocator<void>>, std::__bind<void (Turtlebot3Fake::*)(std::shared_ptr<geometry_msgs::msg::Twist_<std::allocator<void>>>), Turtlebot3Fake *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<geometry_msgs::msg::Twist_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<geometry_msgs::msg::Twist_<std::allocator<void>>>, rclcpp::Node>' requested here
+[7.441s]    99 |   return rclcpp::create_subscription<MessageT>(
+[7.441s]       |                  ^
+[7.441s] /Users/lihong/miniconda3/envs/ros2/csie_project_ws/turtlebot3/turtlebot3_simulations/turtlebot3_fake_node/src/turtlebot3_fake_node.cpp:48:24: note: in instantiation of function template specialization 'rclcpp::Node::create_subscription<geometry_msgs::msg::Twist_<std::allocator<void>>, std::__bind<void (Turtlebot3Fake::*)(std::shared_ptr<geometry_msgs::msg::Twist_<std::allocator<void>>>), Turtlebot3Fake *, const std::placeholders::__ph<1> &>, std::allocator<void>, rclcpp::Subscription<geometry_msgs::msg::Twist_<std::allocator<void>>>, rclcpp::message_memory_strategy::MessageMemoryStrategy<geometry_msgs::msg::Twist_<std::allocator<void>>>>' requested here
+[7.441s]    48 |   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+[7.441s]       |                        ^
+[7.441s] /Users/lihong/miniconda3/envs/ros2/include/rclcpp/rclcpp/any_subscription_callback.hpp:405:5: note: 'set_deprecated<geometry_msgs::msg::Twist_<std::allocator<void>>>' has been explicitly marked deprecated here
+[7.441s]   405 |   [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
+[7.441s]       |     ^
+[11.439s] 1 warning generated.
+[11.458s] [100%] Linking CXX executable turtlebot3_fake_node
+[11.546s] [100%] Built target turtlebot3_fake_node
+[11.562s] Invoked command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node' returned '0': AMENT_PREFIX_PATH=${AMENT_PREFIX_PATH}/csie_project_ws/install/turtlebot3_msgs:/Users/lihong/miniconda3/envs/ros2 CMAKE_PREFIX_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs${CMAKE_PREFIX_PATH} CONDA_PROMPT_MODIFIER=(ros2) DYLD_LIBRARY_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib PYTHONPATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib/python3.11/site-packages:${PYTHONPATH} SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --build /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node -- -j8 -l8
+[11.620s] Invoking command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node': AMENT_PREFIX_PATH=${AMENT_PREFIX_PATH}/csie_project_ws/install/turtlebot3_msgs:/Users/lihong/miniconda3/envs/ros2 CMAKE_PREFIX_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs${CMAKE_PREFIX_PATH} CONDA_PROMPT_MODIFIER=(ros2) DYLD_LIBRARY_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib PYTHONPATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib/python3.11/site-packages:${PYTHONPATH} SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --install /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node
+[11.633s] -- Install configuration: ""
+[11.633s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/lib/turtlebot3_fake_node/turtlebot3_fake_node
+[11.637s] /Users/lihong/miniconda3/envs/ros2/bin/install_name_tool: warning: changes being made to the file will invalidate the code signature in: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/lib/turtlebot3_fake_node/turtlebot3_fake_node
+[11.638s] [cctools-port]: generating fake signature for '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/lib/turtlebot3_fake_node/turtlebot3_fake_node'
+[11.649s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/launch
+[11.649s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/launch/turtlebot3_fake_node.launch.py
+[11.649s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/launch/rviz2.launch.py
+[11.650s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param
+[11.650s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param/waffle_pi.yaml
+[11.650s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param/waffle.yaml
+[11.651s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param/burger.yaml
+[11.651s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/include/
+[11.651s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/include//turtlebot3_fake_node
+[11.651s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/include//turtlebot3_fake_node/turtlebot3_fake_node.hpp
+[11.652s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/ament_index/resource_index/package_run_dependencies/turtlebot3_fake_node
+[11.652s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/ament_index/resource_index/parent_prefix_path/turtlebot3_fake_node
+[11.652s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/ament_prefix_path.sh
+[11.653s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/ament_prefix_path.dsv
+[11.653s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/path.sh
+[11.653s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/path.dsv
+[11.653s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.bash
+[11.653s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.sh
+[11.654s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.zsh
+[11.654s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.dsv
+[11.654s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/package.dsv
+[11.654s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/ament_index/resource_index/packages/turtlebot3_fake_node
+[11.655s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/ament_cmake_export_include_directories-extras.cmake
+[11.655s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/ament_cmake_export_dependencies-extras.cmake
+[11.655s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/turtlebot3_fake_nodeConfig.cmake
+[11.655s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/turtlebot3_fake_nodeConfig-version.cmake
+[11.656s] -- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_fake_node/share/turtlebot3_fake_node/package.xml
+[11.657s] Invoked command in '/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node' returned '0': AMENT_PREFIX_PATH=${AMENT_PREFIX_PATH}/csie_project_ws/install/turtlebot3_msgs:/Users/lihong/miniconda3/envs/ros2 CMAKE_PREFIX_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs${CMAKE_PREFIX_PATH} CONDA_PROMPT_MODIFIER=(ros2) DYLD_LIBRARY_PATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib PYTHONPATH=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_msgs/lib/python3.11/site-packages:${PYTHONPATH} SHLVL=2 _=/Users/lihong/miniconda3/envs/ros2/bin/env __CF_USER_TEXT_ENCODING=0x1F5:0x2:0x35 /Users/lihong/miniconda3/envs/ros2/bin/cmake --install /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_fake_node

@@ -1,0 +1,49 @@
+-- The C compiler identification is Clang 15.0.7
+-- The CXX compiler identification is Clang 15.0.7
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found action_msgs: 1.2.1 (/Users/lihong/miniconda3/envs/ros2/share/action_msgs/cmake)
+-- Found Python3: /Users/lihong/miniconda3/envs/ros2/bin/python3.11 (found version "3.11.8") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found rosidl_generator_c: 3.1.5 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.5 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.5 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rosidl_default_generators: 1.2.0 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_default_generators/cmake)
+-- Found Python3: /Users/lihong/miniconda3/envs/ros2/include/python3.11 (found version "3.11.8") found components: Development NumPy Interpreter Development.Module Development.Embed 
+-- Found std_msgs: 4.2.3 (/Users/lihong/miniconda3/envs/ros2/share/std_msgs/cmake)
+-- Found Python3: /Users/lihong/miniconda3/envs/ros2/bin/python3.11 (found version "3.11.8") found components: Interpreter 
+-- Found ament_cmake_cppcheck: 0.12.10 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake_cppcheck/cmake)
+-- Found ament_cmake_cpplint: 0.12.10 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake_cpplint/cmake)
+-- Found ament_cmake_uncrustify: 0.12.10 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake_uncrustify/cmake)
+-- Found ament_cmake_ros: 0.10.0 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found PythonInterp: /Users/lihong/miniconda3/envs/ros2/bin/python3 (found suitable version "3.11.8", minimum required is "3.6") 
+-- Found python_cmake_module: 0.10.0 (/Users/lihong/miniconda3/envs/ros2/share/python_cmake_module/cmake)
+-- Using PythonExtra_INCLUDE_DIRS: /Users/lihong/miniconda3/envs/ros2/include/python3.11;/Users/lihong/miniconda3/envs/ros2/include/python3.11
+-- Using PythonExtra_LIBRARIES: /Users/lihong/miniconda3/envs/ros2/lib/libpython3.11.dylib
+-- Found Python3: /Users/lihong/miniconda3/envs/ros2/include/python3.11 (found version "3.11.8") found components: Development NumPy Interpreter Development.Module Development.Embed 
+-- Found ament_cmake_flake8: 0.12.10 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake_flake8/cmake)
+-- Found ament_cmake_pep257: 0.12.10 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake_pep257/cmake)
+-- Configuring done (2.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_msgs
+[  1%] Built target turtlebot3_msgs__cpp
+[  4%] Building C object CMakeFiles/turtlebot3_msgs__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_msgs/srv/detail/sound__functions.c.o
+[  4%] Building C object CMakeFiles/turtlebot3_msgs__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_msgs/srv/detail/dqn__functions.c.o
+[  7%] Building C object CMakeFiles/turtlebot3_msgs__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_msgs/action/detail/patrol__functions.c.o
+[  7%] Building C object CMakeFiles/turtlebot3_msgs__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_msgs/msg/detail/version_info__functions.c.o
+[  8%] Building C object CMakeFiles/turtlebot3_msgs__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_msgs/msg/detail/sound__functions.c.o
+[  9%] Building C object CMakeFiles/turtlebot3_msgs__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_msgs/msg/detail/sensor_state__functions.c.o
+[ 11%] Linking C shared library libturtlebot3_msgs__rosidl_generator_c.dylib
+[ 12%] Built target turtlebot3_msgs__rosidl_generator_c

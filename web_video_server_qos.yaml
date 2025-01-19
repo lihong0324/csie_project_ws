@@ -1,0 +1,8 @@
+web_video_server:
+  ros__parameters:
+    qos_overrides:
+      /camera/image_raw:
+        reliability: best_effort
+        durability: volatile
+        depth: 2
+        history: keep_last

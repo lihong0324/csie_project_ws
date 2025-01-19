@@ -1,0 +1,9 @@
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/uninstall.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/my_robot_car_uninstall.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/test.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/edit_cache.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/rebuild_cache.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/list_install_components.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/install.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/install/local.dir
+/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/my_robot_car/CMakeFiles/install/strip.dir

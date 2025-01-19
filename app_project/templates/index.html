@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robot Control Interface</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h1>ROS 2 Robot Control</h1>
+
+  <img id="camera" src="http://192.168.4.78:8080/stream?topic=/camera/image_raw" width="672" height="384" alt=" Robot Camera View">
+
+  <div id="control-panel">
+    <button id="up" class="control-btn"><strong>▲</strong></button>
+    <button id="left" class="control-btn"><strong>◀︎</strong></button>
+    <button id="down" class="control-btn"><strong>▼</strong></button>
+    <button id="right" class="control-btn"><strong>▶︎</strong></button>
+  </div>
+
+  <button id="toggle-btn">切換到手動控制</button>
+
+  <script src="https://unpkg.com/roslib/build/roslib.min.js"></script>
+
+  <script>
+    var manualControl = false;
+    var isMoving = { up: false, down: false, left: false, right: false };
+
+    var ros = new ROSLIB.Ros({
+      url: 'ws://192.168.4.78:9090' //ip位址
+    });
+
+    ros.on('connection', function() {
+      console.log('Connected to ROS');
+    });
+
+    ros.on('error', function(error) {
+      console.log('Error connecting to ROS: ', error);
+    });
+
+    ros.on('close', function() {
+      console.log('Connection to ROS closed');
+    });
+
+    var cmdVel = new ROSLIB.Topic({
+      ros: ros,
+      name: '/cmd_vel',
+      messageType: 'geometry_msgs/Twist'
+    });
+
+    var twist = new ROSLIB.Message({
+      linear: { x: 0.0, y: 0.0, z: 0.0 },
+      angular: { x: 0.0, y: 0.0, z: 0.0 }
+    });
+
+    function toggleMovement(direction) {
+      if (isMoving[direction]) {
+        twist.linear.x = 0.0;
+        twist.angular.z = 0.0;
+        isMoving[direction] = false;
+      } else {
+        switch (direction) {
+          case 'up':
+            twist.linear.x = 0.5;
+            twist.angular.z = 0.0;
+            break;
+          case 'down':
+            twist.linear.x = -0.5;
+            twist.angular.z = 0.0;
+            break;
+          case 'left':
+            twist.linear.x = 0.0;
+            twist.angular.z = 0.5;
+            break;
+          case 'right':
+            twist.linear.x = 0.0;
+            twist.angular.z = -0.5;
+            break;
+        }
+        isMoving[direction] = true;
+      }
+      cmdVel.publish(twist);
+    }
+
+    document.getElementById('up').addEventListener('click', function() { toggleMovement('up'); });
+    document.getElementById('down').addEventListener('click', function() { toggleMovement('down'); });
+    document.getElementById('left').addEventListener('click', function() { toggleMovement('left'); });
+    document.getElementById('right').addEventListener('click', function() { toggleMovement('right'); });
+
+    document.getElementById('toggle-btn').addEventListener('click', function() {
+      manualControl = !manualControl;
+
+      var manualControlTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/manual_control',
+        messageType: 'std_msgs/Bool'
+      });
+
+      var manualControlMsg = new ROSLIB.Message({
+        data: manualControl
+      });
+
+      manualControlTopic.publish(manualControlMsg);
+
+      document.getElementById('toggle-btn').innerText = manualControl ? '切換到自動導航' : '切換到手動控制';
+    });
+  </script>
+</body>
+</html>

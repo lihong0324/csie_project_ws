@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROSBridge Websocket</title>
+</head>
+<body>
+    <h1>ROSBridge Websocket Connection</h1>
+    <p>Status: <span id="status">Not connected</span></p>
+    <ul id="messages">
+        <!-- 收到的訊息會顯示在這裡 -->
+    </ul>
+
+    <!-- 加載 ROSLIB.js (記得使用正確的 CDN 或本地路徑) -->
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+
+    <script>
+        // 初始化 ROS 物件來通過 WebSocket 連接到 Rosbridge 伺服器
+        const ros = new ROSLIB.Ros({ url: "ws://192.168.0.100:9090" });
+
+        // 當與 Rosbridge 成功連接時，更新狀態顯示
+        ros.on("connection", () => {
+            document.getElementById("status").innerHTML = "successful";
+        });
+
+        // 當 Rosbridge 伺服器發生錯誤時，更新狀態顯示錯誤信息
+        ros.on("error", (error) => {
+            document.getElementById("status").innerHTML = `errored out (${error})`;
+        });
+
+        // 當 Rosbridge 伺服器關閉時，更新狀態顯示關閉信息
+        ros.on("close", () => {
+            document.getElementById("status").innerHTML = "closed";
+        });
+
+        // 創建一個訂閱者來監聽 /my_topic
+        const my_topic_listener = new ROSLIB.Topic({
+            ros,
+            name: "/my_topic",
+            messageType: "std_msgs/String",
+        });
+
+        // 當收到 /my_topic 的訊息時，將訊息添加到列表中
+        my_topic_listener.subscribe((message) => {
+            const ul = document.getElementById("messages");
+            const newMessage = document.createElement("li");
+            newMessage.appendChild(document.createTextNode(message.data));
+            ul.appendChild(newMessage);
+        });
+    </script>
+</body>
+</html>

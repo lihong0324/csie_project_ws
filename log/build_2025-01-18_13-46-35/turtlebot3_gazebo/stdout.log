@@ -1,0 +1,216 @@
+-- The C compiler identification is Clang 18.1.8
+-- The CXX compiler identification is Clang 18.1.8
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Users/lihong/miniconda3/envs/ros2/bin/arm64-apple-darwin20.0.0-clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.3.11 (/Users/lihong/miniconda3/envs/ros2/share/ament_cmake/cmake)
+-- Found Python3: /Users/lihong/miniconda3/envs/ros2/bin/python3.11 (found version "3.11.11") found components: Interpreter
+-- Found PkgConfig: /Users/lihong/miniconda3/envs/ros2/bin/pkg-config (found version "0.29.2")
+-- Checking for module 'bullet>=2.82'
+--   Found bullet, version 3.25
+-- Found assimp: /Users/lihong/miniconda3/envs/ros2/include (found suitable version "5.4.3", minimum required is "5.2.0")
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Found DART: /Users/lihong/miniconda3/envs/ros2/include (Required is at least version "6.6") found components: dart
+-- Found Boost: /Users/lihong/miniconda3/envs/ros2/lib/cmake/Boost-1.86.0/BoostConfig.cmake (found suitable version "1.86.0", minimum required is "1.40.0") found components: thread system filesystem program_options regex iostreams date_time
+-- Found ZLIB: /Users/lihong/miniconda3/envs/ros2/lib/libz.dylib (found version "1.3.1")
+-- Looking for ignition-math6 -- found version 6.15.1
+-- Searching for dependencies of ignition-math6
+-- Looking for OGRE...
+-- OGRE_PREFIX_WATCH changed.
+-- Checking for module 'OGRE'
+--   Found OGRE, version 1.9.0
+-- Found Ogre Xalafu (1.10.12)
+-- Found OGRE: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgreMain.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgreMain.dylib
+-- Looking for OGRE_Paging...
+-- Found OGRE_Paging: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgrePaging.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgrePaging.dylib
+-- Looking for OGRE_Terrain...
+-- Found OGRE_Terrain: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgreTerrain.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgreTerrain.dylib
+-- Looking for OGRE_Property...
+-- Found OGRE_Property: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgreProperty.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgreProperty.dylib
+-- Looking for OGRE_RTShaderSystem...
+-- Found OGRE_RTShaderSystem: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgreRTShaderSystem.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgreRTShaderSystem.dylib
+-- Looking for OGRE_Volume...
+-- Found OGRE_Volume: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgreVolume.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgreVolume.dylib
+-- Looking for OGRE_Overlay...
+-- Found OGRE_Overlay: optimized;/Users/lihong/miniconda3/envs/ros2/lib/libOgreOverlay.dylib;debug;/Users/lihong/miniconda3/envs/ros2/lib/libOgreOverlay.dylib
+-- Looking for ignition-math6 -- found version 6.15.1
+-- Looking for ignition-transport8 -- found version 8.4.0
+-- Searching for dependencies of ignition-transport8
+-- Found UUID: TRUE
+-- Looking for ignition-msgs5 -- found version 5.11.0
+-- Searching for dependencies of ignition-msgs5
+-- Looking for ignition-math6 -- found version 6.15.1
+-- Checking for module 'tinyxml2'
+--   Found tinyxml2, version 10.0.0
+-- Looking for ignition-msgs5 -- found version 5.11.0
+-- Looking for ignition-common3 -- found version 3.15.1
+-- Searching for dependencies of ignition-common3
+-- Looking for dlfcn.h - found
+-- Looking for libdl - found
+-- Found DL: TRUE
+-- Searching for <ignition-common3> component [graphics]
+-- Looking for ignition-common3-graphics -- found version 3.15.1
+-- Searching for dependencies of ignition-common3-graphics
+-- Looking for ignition-math6 -- found version 6.15.1
+-- Looking for ignition-fuel_tools4 -- found version 4.6.0
+-- Searching for dependencies of ignition-fuel_tools4
+-- Found CURL: /Users/lihong/miniconda3/envs/ros2/lib/libcurl.dylib (found version "8.11.1")
+-- Checking for module 'jsoncpp'
+--   Found jsoncpp, version 1.9.6
+-- Found JSONCPP: TRUE
+-- Checking for module 'yaml-0.1'
+--   Found yaml-0.1, version 0.2.5
+-- Found YAML: TRUE
+-- Checking for module 'libzip'
+--   Found libzip, version 1.11.2
+-- Found ZIP: TRUE
+-- Looking for ignition-common3 -- found version 3.15.1
+-- Looking for ignition-math6 -- found version 6.15.1
+-- Looking for ignition-msgs5 -- found version 5.11.0
+-- Found gazebo_ros_pkgs: 3.7.0 (/Users/lihong/miniconda3/envs/ros2/share/gazebo_ros_pkgs/cmake)
+-- Found geometry_msgs: 4.2.4 (/Users/lihong/miniconda3/envs/ros2/share/geometry_msgs/cmake)
+-- Found rosidl_generator_c: 3.1.6 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.6 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.6 (/Users/lihong/miniconda3/envs/ros2/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found nav_msgs: 4.2.4 (/Users/lihong/miniconda3/envs/ros2/share/nav_msgs/cmake)
+-- Found rclcpp: 16.0.11 (/Users/lihong/miniconda3/envs/ros2/share/rclcpp/cmake)
+-- Checking for module 'yaml-0.1'
+--   Found yaml-0.1, version 0.2.5
+-- Found rmw_implementation_cmake: 6.1.2 (/Users/lihong/miniconda3/envs/ros2/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.7 (/Users/lihong/miniconda3/envs/ros2/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /opt/homebrew/opt/openssl@3/lib/libcrypto.dylib (found version "3.4.0")
+-- Found FastRTPS: /Users/lihong/miniconda3/envs/ros2/include
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found sensor_msgs: 4.2.4 (/Users/lihong/miniconda3/envs/ros2/share/sensor_msgs/cmake)
+-- Found tf2: 0.25.10 (/Users/lihong/miniconda3/envs/ros2/share/tf2/cmake)
+-- Configuring done (12.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_gazebo
+[ 12%] Building CXX object CMakeFiles/obstacle1.dir/models/turtlebot3_dqn_world/obstacle_plugin/obstacle1.cc.o
+[ 25%] Building CXX object CMakeFiles/obstacles.dir/models/turtlebot3_dqn_world/obstacle_plugin/obstacles.cc.o
+[ 37%] Building CXX object CMakeFiles/turtlebot3_drive.dir/src/turtlebot3_drive.cpp.o
+[ 50%] Building CXX object CMakeFiles/obstacle2.dir/models/turtlebot3_dqn_world/obstacle_plugin/obstacle2.cc.o
+[ 62%] Linking CXX shared library libobstacles.dylib
+[ 62%] Built target obstacles
+[ 75%] Linking CXX shared library libobstacle1.dylib
+[ 87%] Linking CXX shared library libobstacle2.dylib
+[ 87%] Built target obstacle2
+[ 87%] Built target obstacle1
+[100%] Linking CXX executable turtlebot3_drive
+[100%] Built target turtlebot3_drive
+-- Install configuration: ""
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/lib/turtlebot3_gazebo/turtlebot3_drive
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/turtlebot3_world.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/robot_state_publisher.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/.DS_Store
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/empty_world.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/turtlebot3_dqn_stage1.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/turtlebot3_house.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/turtlebot3_dqn_stage4.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/turtlebot3_dqn_stage2.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/my_world.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/spawn_turtlebot3.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//launch/turtlebot3_dqn_stage3.launch.py
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle_pi
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle_pi/model-1_4_.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle_pi/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle_pi/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_house
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_house/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_house/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_waffle/model-1_4.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes/lds.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes/waffle_pi_base.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes/r200.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes/burger_base.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes/tire.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/meshes/waffle_base.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_common/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world/meshes
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world/meshes/wall.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world/meshes/hexagon.dae
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_world/model-1_4.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_burger
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_burger/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_burger/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_burger/model-1_4.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacles
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacles/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacles/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle1
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle1/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle1/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle2
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle2/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle2/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle_plugin
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle_plugin/obstacle2.cc
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle_plugin/CMakeLists.txt
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle_plugin/obstacles.cc
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/obstacle_plugin/obstacle1.cc
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/inner_walls
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/inner_walls/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/inner_walls/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/goal_box
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/goal_box/model.sdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/goal_box/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//models/turtlebot3_dqn_world/model.config
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//rviz
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//rviz/tb3_gazebo.rviz
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//urdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//urdf/common_properties.urdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//urdf/turtlebot3_burger.urdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//urdf/turtlebot3_waffle_pi.urdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//urdf/turtlebot3_waffle.urdf
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/turtlebot3_dqn_stage2.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/turtlebot3_world.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/turtlebot3_dqn_stage4.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/turtlebot3_dqn_stage1.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/turtlebot3_house.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/turtlebot3_dqn_stage3.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo//worlds/empty_world.world
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/include/
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/include//.DS_Store
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/include//turtlebot3_gazebo
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/include//turtlebot3_gazebo/turtlebot3_drive.hpp
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/ament_index/resource_index/package_run_dependencies/turtlebot3_gazebo
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/ament_index/resource_index/parent_prefix_path/turtlebot3_gazebo
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/environment/ament_prefix_path.sh
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/environment/ament_prefix_path.dsv
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/environment/path.sh
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/environment/path.dsv
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/local_setup.bash
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/local_setup.sh
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/local_setup.zsh
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/local_setup.dsv
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/package.dsv
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/ament_index/resource_index/packages/turtlebot3_gazebo
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/cmake/turtlebot3_gazeboConfig.cmake
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/cmake/turtlebot3_gazeboConfig-version.cmake
+-- Installing: /Users/lihong/miniconda3/envs/ros2/csie_project_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/package.xml

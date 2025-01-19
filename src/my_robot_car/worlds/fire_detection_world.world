@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="fire_detection_world">
+
+    <!-- 插入地面 -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- 插入太陽 -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- 插入障礙物 (立方體) -->
+    <model name="obstacle_box">
+      <pose>2 2 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>1 1 1</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>1 1 1</size></box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 插入障礙物 (立方體) -->
+    <model name="obstacle_box2">
+        <pose>-2 2 0.5 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry>
+              <box><size>0.7 0.7 0.7</size></box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box><size>0.7 0.7 0.7</size></box>
+            </geometry>
+          </visual>
+        </link>
+    </model>
+
+    <!-- 插入紅色球作為火災模擬 -->
+    <model name="fire_ball">
+      <pose>-1 -1 0.5 0 0 0</pose> <!-- 提升 Z 軸高度到 0.5 -->
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <sphere><radius>0.1</radius></sphere>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere><radius>0.1</radius></sphere>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient> <!-- 紅色 -->
+            <diffuse>1 0 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
