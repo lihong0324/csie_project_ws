@@ -1,1 +1,0 @@
-ament_cmake_symlink_install_targets("TARGET_FILES" "/Users/lihong/miniconda3/envs/ros2/csie_project_ws/build/turtlebot3_gazebo/turtlebot3_drive" "TARGETS" "turtlebot3_drive" "DESTINATION" "lib/turtlebot3_gazebo")

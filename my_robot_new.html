@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robot Control Interface</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #camera {
+      border: 2px solid black;
+      margin-bottom: 20px;
+      border-radius: 20px;
+    }
+
+    #control-panel {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      grid-gap: 10px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .control-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      font-size: 16px;
+      text-align: center;
+      line-height: 80px;
+      background-color: #8cbee9d2;
+      border: 1px solid black;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .control-btn.active {
+      background-color: #4682b4;
+    }
+
+    #up { grid-column: 2; grid-row: 1; }
+    #left { grid-column: 1; grid-row: 2; }
+    #down { grid-column: 2; grid-row: 3; }
+    #right { grid-column: 3; grid-row: 2; }
+
+    #toggle-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #f0ad4e;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ROS 2 Robot Control</h1>
+
+  <img id="camera" src="http://192.168.0.106:8080/stream?topic=/camera/image_raw" width="672" height="384" alt="Robot Camera View">
+
+  <div id="control-panel">
+    <button id="up" class="control-btn"><strong>▲</strong></button>
+    <button id="left" class="control-btn"><strong>◀︎</strong></button>
+    <button id="down" class="control-btn"><strong>▼</strong></button>
+    <button id="right" class="control-btn"><strong>►</strong></button>
+  </div>
+
+  <button id="toggle-btn">切換到手動控制</button>
+
+  <script src="https://unpkg.com/roslib/build/roslib.min.js"></script>
+
+  <script>
+    var manualControl = false;
+    var lastActiveButton = null; // 用來追蹤最後被按下的按鈕
+    var activeKey = null; // 用來追蹤當前的鍵盤按下狀態
+
+    var ros = new ROSLIB.Ros({
+      url: 'ws://192.168.0.106:9090'
+    });
+
+    ros.on('connection', function() {
+      console.log('Connected to ROS');
+    });
+
+    ros.on('error', function(error) {
+      console.log('Error connecting to ROS: ', error);
+    });
+
+    ros.on('close', function() {
+      console.log('Connection to ROS closed');
+    });
+
+    var cmdVel = new ROSLIB.Topic({
+      ros: ros,
+      name: '/cmd_vel',
+      messageType: 'geometry_msgs/Twist'
+    });
+
+    var twist = new ROSLIB.Message({
+      linear: { x: 0.0, y: 0.0, z: 0.0 },
+      angular: { x: 0.0, y: 0.0, z: 0.0 }
+    });
+
+    function resetButtonStyles() {
+      if (lastActiveButton) {
+        lastActiveButton.classList.remove('active');
+        lastActiveButton = null;
+      }
+    }
+
+    function toggleMovement(direction, button) {
+      // 如果按鈕已經是活動狀態，則停止動作並重置顏色
+      if (lastActiveButton === button) {
+        stopMovement();
+        return;
+      }
+
+      resetButtonStyles();
+
+      // 根據方向設置速度
+      switch (direction) {
+        case 'up':
+          twist.linear.x = 0.5;
+          twist.angular.z = 0.0;
+          break;
+        case 'down':
+          twist.linear.x = -0.5;
+          twist.angular.z = 0.0;
+          break;
+        case 'left':
+          twist.linear.x = 0.0;
+          twist.angular.z = 0.5;
+          break;
+        case 'right':
+          twist.linear.x = 0.0;
+          twist.angular.z = -0.5;
+          break;
+      }
+
+      cmdVel.publish(twist);
+
+      // 設置按鈕顏色
+      button.classList.add('active');
+      lastActiveButton = button;
+    }
+
+    function stopMovement() {
+      twist.linear.x = 0.0;
+      twist.angular.z = 0.0;
+      cmdVel.publish(twist);
+
+      resetButtonStyles();
+    }
+
+    // 設置按鈕點擊事件
+    document.getElementById('up').addEventListener('click', function() { toggleMovement('up', this); });
+    document.getElementById('down').addEventListener('click', function() { toggleMovement('down', this); });
+    document.getElementById('left').addEventListener('click', function() { toggleMovement('left', this); });
+    document.getElementById('right').addEventListener('click', function() { toggleMovement('right', this); });
+
+    // 鍵盤事件處理
+    document.addEventListener('keydown', function(event) {
+      if (activeKey) return; // 防止重複觸發
+      switch (event.key) {
+        case 'ArrowUp':
+          activeKey = 'ArrowUp';
+          toggleMovement('up', document.getElementById('up'));
+          break;
+        case 'ArrowDown':
+          activeKey = 'ArrowDown';
+          toggleMovement('down', document.getElementById('down'));
+          break;
+        case 'ArrowLeft':
+          activeKey = 'ArrowLeft';
+          toggleMovement('left', document.getElementById('left'));
+          break;
+        case 'ArrowRight':
+          activeKey = 'ArrowRight';
+          toggleMovement('right', document.getElementById('right'));
+          break;
+      }
+    });
+
+    document.addEventListener('keyup', function(event) {
+      if (event.key === activeKey) {
+        stopMovement();
+        activeKey = null;
+      }
+    });
+
+    // 手動/自動控制的切換邏輯
+    document.getElementById('toggle-btn').addEventListener('click', function() {
+      manualControl = !manualControl;
+
+      var manualControlTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/manual_control',
+        messageType: 'std_msgs/Bool'
+      });
+
+      var manualControlMsg = new ROSLIB.Message({
+        data: manualControl
+      });
+
+      manualControlTopic.publish(manualControlMsg);
+
+      document.getElementById('toggle-btn').innerText = manualControl ? '切換到自動導航' : '切換到手動控制';
+    });
+  </script>
+
+</body>
+</html>
