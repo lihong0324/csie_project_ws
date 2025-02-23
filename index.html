@@ -5,48 +5,73 @@
     <link rel="icon" href="/fire.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>火APP</title>
+
+    <style>
+      /* 固定 #ros2 區塊在左下角 */
+      #ros2 {
+        position: fixed;
+        bottom: 10px; /* 與底部距離 */
+        left: 10px; /* 與左側距離 */
+        background: rgba(0, 0, 0, 0.7); /* 半透明背景 */
+        color: white; /* 文字顏色 */
+        padding: 10px; /* 內距 */
+        border-radius: 8px; /* 圓角 */
+        width: 250px; /* 固定寬度 */
+        font-family: Arial, sans-serif; /* 設定字體 */
+        font-size: 14px;
+        z-index: 1000; /* 確保顯示在最上層 */
+      }
+
+      /* 設定內部 ul 列表 */
+      #messages {
+        max-height: 150px; /* 設定最大高度 */
+        overflow-y: auto; /* 如果訊息過多，允許滾動 */
+        padding: 5px;
+        list-style: none;
+      }
+
+      /* 設定狀態的顏色 */
+      #status {
+        font-weight: bold;
+        color: lightgreen;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
 
     <div id="ros2">
-        <h2>ROSBridge Websocket Connection</h2>
+        <h2>ROSBridge Websocket</h2>
         <p>Status: <span id="status">Not connected</span></p>
         <ul id="messages">
             <!-- 收到的訊息會顯示在這裡 -->
         </ul>
 
-        <!-- 加載 ROSLIB.js (記得使用正確的 CDN 或本地路徑) -->
         <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
-
         <script>
             // 初始化 ROS 物件來通過 WebSocket 連接到 Rosbridge 伺服器
-            const ros = new ROSLIB.Ros({ url: "ws://192.168.0.100:9090" });
+            const ros = new ROSLIB.Ros({ url: "ws://192.168.4.72:9090" });
 
-            // 當與 Rosbridge 成功連接時，更新狀態顯示
             ros.on("connection", () => {
-                document.getElementById("status").innerHTML = "successful";
+                document.getElementById("status").innerHTML = "Connected";
             });
 
-            // 當 Rosbridge 伺服器發生錯誤時，更新狀態顯示錯誤信息
             ros.on("error", (error) => {
-                document.getElementById("status").innerHTML = `errored out (${error})`;
+                document.getElementById("status").innerHTML = `Error (${error})`;
             });
 
-            // 當 Rosbridge 伺服器關閉時，更新狀態顯示關閉信息
             ros.on("close", () => {
-                document.getElementById("status").innerHTML = "closed";
+                document.getElementById("status").innerHTML = "Closed";
             });
 
-            // 創建一個訂閱者來監聽 /my_topic
+            // 創建訂閱者來監聽 /my_topic
             const my_topic_listener = new ROSLIB.Topic({
                 ros,
                 name: "/my_topic",
                 messageType: "std_msgs/String",
             });
 
-            // 當收到 /my_topic 的訊息時，將訊息添加到列表中
             my_topic_listener.subscribe((message) => {
                 const ul = document.getElementById("messages");
                 const newMessage = document.createElement("li");

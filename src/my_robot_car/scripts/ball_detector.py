@@ -13,7 +13,7 @@ class BallDetector(Node):
         super().__init__('ball_detector')
         self.subscription = self.create_subscription(
             Image,
-            '/camera/image_raw',
+            '/image_raw', # 使用 USB 相機的影像主題
             self.image_callback,
             10)
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)

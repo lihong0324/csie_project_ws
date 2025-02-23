@@ -65,8 +65,7 @@
 <body>
 
   <h1>ROS 2 Robot Control</h1>
-
-  <img id="camera" src="http://192.168.0.106:8080/stream?topic=/camera/image_raw" width="672" height="384" alt="Robot Camera View">
+  <img id="camera" src="http://192.168.4.72:8080/stream?topic=/image_raw" width="672" height="384" alt="Robot Camera View">
 
   <div id="control-panel">
     <button id="up" class="control-btn"><strong>▲</strong></button>
@@ -85,7 +84,7 @@
     var activeKey = null; // 用來追蹤當前的鍵盤按下狀態
 
     var ros = new ROSLIB.Ros({
-      url: 'ws://192.168.0.106:9090'
+      url: 'ws://192.168.4.72:9090'
     });
 
     ros.on('connection', function() {
