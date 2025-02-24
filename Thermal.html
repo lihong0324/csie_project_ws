@@ -13,7 +13,16 @@
             position: relative;
             display: inline-block;
         }
-        video, canvas {
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none; /* 隱藏 video 的邊框 */
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             border: 1px solid black;
             cursor: crosshair;
         }
@@ -26,6 +35,7 @@
             pointer-events: none;
             display: none;
             font-size: 14px;
+            z-index: 10;
         }
     </style>
 </head>
@@ -81,6 +91,15 @@
             if (temperature !== null) {
                 tooltip.style.left = `${event.clientX + 10}px`;
                 tooltip.style.top = `${event.clientY + 10}px`;
+
+                // 確保 tooltip 不會超出畫面範圍
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const maxLeft = window.innerWidth - tooltipRect.width - 20;
+                const maxTop = window.innerHeight - tooltipRect.height - 20;
+                
+                tooltip.style.left = Math.min(event.clientX + 10, maxLeft) + 'px';
+                tooltip.style.top = Math.min(event.clientY + 10, maxTop) + 'px';
+
                 tooltip.innerHTML = `溫度: ${temperature}°C`;
                 tooltip.style.display = 'block';
             }

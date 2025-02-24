@@ -16,7 +16,6 @@ setup(
     entry_points={
         'console_scripts': [
             'ball_detector = my_robot_car.scripts.ball_detector:main',
-            'fire_tracking_node = my_robot_car.scripts.fire_tracking_node:main',
         ],
     },
 
