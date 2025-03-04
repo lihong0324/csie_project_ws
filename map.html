@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>機器車即時 SLAM 地圖</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/eventemitter2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/roslib"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ros2d"></script>
+</head>
+<body>
+    <h1>機器車即時 SLAM 地圖</h1>
+    <div id="map" style="width: 800px; height: 600px;"></div>
+    <script>
+        // 連接 ROS 2 WebSocket
+        var ros = new ROSLIB.Ros({
+            url: "ws://192.168.1.154:9090"
+        });
+
+        ros.on("connection", function () {
+            console.log("Connected to ROS 2 WebSocket");
+        });
+
+        ros.on("error", function (error) {
+            console.log("Error connecting to ROS 2:", error);
+        });
+
+        ros.on("close", function () {
+            console.log("Disconnected from ROS 2");
+        });
+
+        // 建立地圖顯示區
+        var viewer = new ROS2D.Viewer({
+            divID: "map",
+            width: 800,
+            height: 600
+        });
+
+        // 訂閱地圖數據
+        var gridClient = new ROS2D.OccupancyGridClient({
+            ros: ros,
+            rootObject: viewer.scene,
+            continuous: true
+        });
+
+        gridClient.on("change", function () {
+            viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
+            viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
+        });
+
+        // 顯示機器車位置
+        var robotMarker = new ROS2D.NavigationArrow({
+            size: 0.5, // 機器車大小
+            strokeSize: 0.1,
+            fillColor: "blue",
+            pulse: true
+        });
+
+        viewer.scene.addChild(robotMarker);
+
+        // 訂閱 TF，更新機器車位置
+        var tfClient = new ROSLIB.TFClient({
+            ros: ros,
+            fixedFrame: "map",  // 地圖的固定參考座標
+            angularThres: 0.01,
+            transThres: 0.01,
+            rate: 10.0
+        });
+
+        tfClient.subscribe("base_link", function (tf) {
+            robotMarker.x = tf.translation.x;
+            robotMarker.y = -tf.translation.y; // ROS2D 坐標系需要翻轉 y 軸
+            robotMarker.rotation = tf.rotation.z;
+        });
+    </script>
+</body>
+</html>
