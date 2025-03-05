@@ -14,7 +14,7 @@
     <script>
         // 連接 ROS 2 WebSocket
         var ros = new ROSLIB.Ros({
-            url: "ws://192.168.1.154:9090"
+            url: "ws://192.168.4.92:9090"
         });
 
         ros.on("connection", function () {
@@ -40,7 +40,8 @@
         var gridClient = new ROS2D.OccupancyGridClient({
             ros: ros,
             rootObject: viewer.scene,
-            continuous: true
+            continuous: true,
+            topic: "/map"  // 確保這裡是你 map_server 發布的地圖 topic
         });
 
         gridClient.on("change", function () {
