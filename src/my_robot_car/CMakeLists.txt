@@ -10,8 +10,9 @@ find_package(sensor_msgs REQUIRED)
 # 添加 Python 腳本可執行檔
 install(
   PROGRAMS
-    scripts/ball_detector.py  # 確保這個路徑是正確的
-    scripts/fire_detector.py  # 新增這一行
+    scripts/fire_detector_1.py  # 確保這個路徑是正確的
+    scripts/fire_detector_2.py  # 新增這一行
+    scripts/fire_sample.py  # 新增這一行
   DESTINATION lib/${PROJECT_NAME}
 )
 # 安裝 Python 腳本

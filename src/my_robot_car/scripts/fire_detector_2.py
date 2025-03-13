@@ -32,7 +32,7 @@ class FireDetector(Node):
         self.thread = threading.Thread(target=self.process_data)
         self.thread.start()
 
-        self.get_logger().info("🔥 火焰偵測節點已啟動")
+        self.get_logger().info("火焰偵測節點已啟動")
 
     def process_data(self):
         while not self.stop_flag:
@@ -61,7 +61,7 @@ class FireDetector(Node):
         self.cap.release()
         self.ser.close()
         super().destroy_node()
-        self.get_logger().info("🔥 火焰偵測節點已關閉")
+        self.get_logger().info("火焰偵測節點已關閉")
 
 def main(args=None):
     rclpy.init(args=args)

@@ -15,8 +15,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ball_detector = my_robot_car.scripts.ball_detector:main',
-            'fire_detector = my_robot_car.scripts.fire_detector:main',
+            'ball_detector = my_robot_car.scripts.fire_detector_1:main',
+            'fire_detector = my_robot_car.scripts.fire_detector_2:main',
+            'fire_sample = my_robot_car.scripts.fire_sample:main',
         ],
     },
 
