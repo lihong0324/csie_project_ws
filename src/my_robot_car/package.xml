@@ -1,17 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
     <name>my_robot_car</name>
     <version>0.0.1</version>
     <description>A package for controlling a robot car.</description>
     <maintainer email="leo930324@gmail.com">lihong</maintainer>
     <license>Apache-2.0</license>
-    
+
     <buildtool_depend>ament_cmake</buildtool_depend>
-    
+
     <depend>rclcpp</depend>
     <depend>std_msgs</depend>
     <depend>sensor_msgs</depend>
     
+    <!-- 新增SLAM相關依賴 -->
+    <depend>nav_msgs</depend>
+    <depend>slam_toolbox</depend>
+    <depend>nav2_map_server</depend>
+    <depend>rosbridge_server</depend>
+
     <export>
-      <build_type>ament_cmake</build_type>
+        <build_type>ament_cmake</build_type>
     </export>
-  </package>
+</package>

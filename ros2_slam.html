@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>ROS2 SLAM地圖即時可視化</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/roslib/1.1.0/roslib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css"/>
+    <style>
+        #map { height: 600px; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="connection-status">連接狀態：未連接</div>
+
+    <script>
+    // ROS連接配置
+    const ros = new ROSLIB.Ros({
+        url: 'ws://你的ROS主機IP:9090'
+    });
+
+    // 連接狀態處理
+    ros.on('connection', () => {
+        document.getElementById('connection-status').textContent = '連接成功';
+    });
+
+    ros.on('error', (error) => {
+        document.getElementById('connection-status').textContent = '連接錯誤：' + error;
+    });
+
+    ros.on('close', () => {
+        document.getElementById('connection-status').textContent = '連接已關閉';
+    });
+
+    // 地圖訂閱
+    const mapTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/map',
+        messageType: 'nav_msgs/msg/OccupancyGrid'
+    });
+
+    // 初始化Leaflet地圖
+    const map = L.map('map').setView([0, 0], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // 地圖數據處理
+    mapTopic.subscribe((message) => {
+        // 解析地圖數據
+        const mapWidth = message.info.width;
+        const mapHeight = message.info.height;
+        const resolution = message.info.resolution;
+        const origin = message.info.origin;
+
+        // 繪製地圖
+        const mapData = message.data;
+        const canvas = document.createElement('canvas');
+        canvas.width = mapWidth;
+        canvas.height = mapHeight;
+        const ctx = canvas.getContext('2d');
+
+        for (let y = 0; y < mapHeight; y++) {
+            for (let x = 0; x < mapWidth; x++) {
+                const index = x + y * mapWidth;
+                const value = mapData[index];
+                
+                if (value === 100) {
+                    ctx.fillStyle = 'black';  // 障礙物
+                } else if (value === 0) {
+                    ctx.fillStyle = 'white';  // 可通行區域
+                } else {
+                    ctx.fillStyle = 'gray';   // 未知區域
+                }
+                
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+
+        // 將Canvas圖層添加到地圖
+        const imageLayer = L.imageOverlay(
+            canvas.toDataURL(), 
+            [[origin.position.x, origin.position.y], 
+             [origin.position.x + mapWidth * resolution, 
+              origin.position.y + mapHeight * resolution]]
+        ).addTo(map);
+    });
+    </script>
+</body>
+</html>
