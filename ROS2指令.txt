@@ -1,0 +1,144 @@
+Gazebo：
+ros2 launch gazebo_ros gazebo.launch.py world:=/Users/lihong/miniconda3/envs/ros2/dev_ws/src/lihong/worlds/empty.world
+
+查看ROS2版本：
+printenv ROS_DISTRO
+
+ROS環境：
+source /Users/lihong/miniconda3/envs/ros2/setup.zsh
+source /opt/ros/humble/setup.bash
+
+Conda：
+conda activate ros2 / conda deactivate
+
+ROS2中的命令：
+ros2 topic list
+
+colcon：
+colcon build --symlink-install
+
+rclnodejs：
+rclnodejs："^0.25.0"
+
+node_js：
+docker run node:20-alpine
+
+pip：
+sudo pip install . (->setup.py)
+
+查找檔案：
+ros2 pkg list | grep lihong(->package_name)
+
+移除colcon檔案：
+rm -rf build install log
+
+Colcon指定路徑：
+colcon build --cmake-args \
+  -DPython3_EXECUTABLE=$(which python3.11) \
+  -DPython3_NumPy_INCLUDE_DIR=$(python3.11 -c "import numpy; print(numpy.get_include())")
+
+Colcon跳過測試：
+colcon build --cmake-args -DBUILD_TESTING=OFF
+
+Run python file / Terminal：
+Fn + control + F5 / control + ~
+
+ROS2執行：
+* TURTLEBOT3_MODEL=waffle ros2 launch turtlebot3_gazebo my_world.launch.py world:=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/worlds/fire_detection_world.world
+* ros2 run my_robot_car ball_detector.py
+* ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+* ros2 run web_video_server web_video_server
+* python app2.py
+
+Ubuntu機器車：
+* TURTLEBOT3_MODEL=waffle ros2 launch my_robot_car my_world.launch.py world:=/home/playrobot/Downloads/csie_project_ws/src/my_robot_car/worlds/fire_detection_world.world
+
+影像品質：
+* ros2 param set /camera_driver resolution 672x384
+* ros2 param set /camera_driver frame_rate 15
+* ros2 run web_video_server web_video_server _quality:=50 _buffer_length:=1
+* ros2 param set /camera_driver update_rate 15.00
+* ros2 run web_video_server web_video_server _quality:=50 _buffer_length:=1 --ros-args --params-file web_video_server_qos.yaml
+
+CMakeLists.txt 中強制指定 CMake 使用 Python 3.11：
+* find_package(Python3 3.11 EXACT REQUIRED)
+* find_package(PythonInterp 3.11 REQUIRED)
+
+Conda安裝：
+* conda install ros-humble-rosbridge-server
+
+Git：
+* git status
+* git config --global user. name “lihong”
+* git config --global user.email “email”
+* git add *.html
+* git init （初始化）
+* git commit -m “簡短的備註” （提交版本）
+* git log —oneline （查看版本）
+* git diff fd0b510 — index.html  （比較差異）
+* git checkout fd0b510 — index.html （還原版本）
+* git push （同步到Github）/ git pull （從Github下載）
+
+Docker：
+* 執行micro-ros-agent
+docker run -it --rm --net=host microros/micro-ros-agent:humble udp4 --port 8888
+* Docker run
+docker run -it \
+    --name ros2_project_container \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v ~/ros2_project:/root/ros2_project \
+    -p 9090:9090 \
+    -p 11311:11311 \
+    ros2_humble_project /bin/bash
+* 啟動容器
+docker start ros2_project_container
+* 進入容器
+docker exec -it ros2_project_container /bin/bash
+* DISPLAY
+export DISPLAY=host.docker.internal:0
+* 進入 ros2_project
+cd / root/ros2_project
+
+Install:
+sudo apt-get update
+sudo apt-get install -y x11-apps
+sudo apt-get install -y libgl1-mesa-glx libgl1-mesa-dri libglu1-mesa
+
+啟動機器人底盤節點：
+ros2 launch huanyu_robot_start Huanyu_robot_start.launch.py 
+
+啟動機器人導航節點：
+ros2 launch huanyu_robot_start navigation2.launch.py
+
+鍵盤控制：
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+執行權限：
+chmod +x fire_detection_control_node.py
+
+安裝相機：
+sudo apt  install ros-humble-usb-cam
+
+執行相機：
+ros2 run usb_cam usb_cam_node_exe
+ros2 run rqt_image_view rqt_image_view
+ros2 run usb_cam usb_cam_node_exe --ros-args \
+  -p image_width:=640 -p image_height:=480 \
+  -p framerate:=30.0 \
+  -p pixel_format:=mjpeg2rgb
+
+web_video_server：
+ros2 run web_video_server web_video_server --ros-args --param image_transport:=compressed
+
+保存地圖：
+ros2 launch huanyu_robot_start slam_toolbox_online_sync_launch.py 
+cd ~/Desktop/robot_ws/robot_ws/src/huanyu_robot_start/map
+ros2 run nav2_map_server map_saver_cli -f map --ros-args -p save_map_timeout:=10000.0
+
+執行地圖：
+ros2 launch your_slam_package map_ server. launch. py
+
+補充資料：
+* 查詢IP位址
+ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'
