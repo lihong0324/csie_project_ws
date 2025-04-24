@@ -13,7 +13,7 @@
       justify-content: center;
       min-height: 100vh;
       margin: 0;
-      padding: 20px;
+      padding: 0; /* 移除頁面內邊距 */
       box-sizing: border-box;
       transform: scale(0.8);
       transform-origin: center top;
@@ -24,6 +24,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding-bottom: 40px; /* 增加底部空間 */
     }
 
     h1 {
@@ -56,6 +57,19 @@
       padding: 5px 10px;
       border-radius: 5px;
       font-size: 14px;
+      z-index: 10;
+    }
+
+    .view-toggle-hint {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 10;
     }
 
     #control-panel {
@@ -162,6 +176,24 @@
     .thermal-value {
       font-weight: bold;
     }
+
+    #main-camera-view {
+      position: relative;
+      width: 640px;
+      height: 360px;
+    }
+
+    #standard-camera, #thermal-camera {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #thermal-camera {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -170,12 +202,12 @@
     
     <div class="camera-container">
       <div class="camera-feed">
-        <div class="camera-label">標準攝像頭</div>
-        <img id="standard-camera" src="http://192.168.4.124:8080/stream?topic=/image_raw" width="640" height="360" alt="Robot Camera View">
-      </div>
-      <div class="camera-feed">
-        <div class="camera-label">熱成像攝像頭</div>
-        <img id="thermal-camera" src="http://192.168.4.124:8080/stream?topic=/thermal_image" width="640" height="360" alt="Thermal Camera View">
+        <div class="camera-label" id="camera-mode-label">標準攝像頭</div>
+        <div class="view-toggle-hint">按「1」鍵切換熱成像攝影機</div>
+        <div id="main-camera-view">
+          <img id="standard-camera" src="http://192.168.0.103:5000/video_feed_raw" alt="Robot Camera View">
+          <img id="thermal-camera" src="http://192.168.0.103:5000/video_feed_thermal" alt="Thermal Camera View">
+        </div>
       </div>
     </div>
 
@@ -205,14 +237,6 @@
         <div class="thermal-data">
           <span>最高溫度:</span>
           <span id="max-temp" class="thermal-value">0°C</span>
-        </div>
-        <div class="thermal-data">
-          <span>平均溫度:</span>
-          <span id="avg-temp" class="thermal-value">0°C</span>
-        </div>
-        <div class="thermal-data">
-          <span>最低溫度:</span>
-          <span id="min-temp" class="thermal-value">0°C</span>
         </div>
       </div>
       
@@ -248,6 +272,7 @@
     var manualControl = false;
     var lastActiveButton = null; // 用來追蹤最後被按下的按鈕
     var activeKey = null; // 用來追蹤當前的鍵盤按下狀態
+    var thermalCameraActive = false; // 追蹤熱成像攝影機狀態
 
     var ros = new ROSLIB.Ros({
       url: 'ws://192.168.4.124:9090'
@@ -279,11 +304,11 @@
       messageType: 'std_msgs/Bool'
     });
 
-    // 訂閱熱成像數據的Topic
+    // 訂閱熱成像數據的Topic - 使用JSON
     var thermalData = new ROSLIB.Topic({
       ros: ros,
       name: '/thermal_data',
-      messageType: 'sensor_msgs/Temperature' // 假設使用溫度消息類型，實際應根據系統設計調整
+      messageType: 'std_msgs/String' // 使用字符串類型傳遞JSON數據
     });
 
     // 訂閱馬達狀態的Topic
@@ -314,11 +339,29 @@
 
     // 防止方向鍵滾動頁面
     window.addEventListener("keydown", function(e) {
-      // 如果是方向鍵，阻止默認行為
-      if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].indexOf(e.key) > -1) {
+      // 如果是方向鍵或數字鍵1，阻止默認行為
+      if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "1"].indexOf(e.key) > -1) {
         e.preventDefault();
       }
     }, false);
+
+    // 切換攝影機顯示模式
+    function toggleCameraMode() {
+      thermalCameraActive = !thermalCameraActive;
+      var standardCamera = document.getElementById('standard-camera');
+      var thermalCamera = document.getElementById('thermal-camera');
+      var cameraLabel = document.getElementById('camera-mode-label');
+      
+      if (thermalCameraActive) {
+        standardCamera.style.display = 'none';
+        thermalCamera.style.display = 'block';
+        cameraLabel.textContent = '熱成像攝影機';
+      } else {
+        standardCamera.style.display = 'block';
+        thermalCamera.style.display = 'none';
+        cameraLabel.textContent = '標準攝像頭';
+      }
+    }
 
     function resetButtonStyles() {
       if (lastActiveButton) {
@@ -400,6 +443,12 @@
 
     // 鍵盤事件處理
     document.addEventListener('keydown', function(event) {
+      // 檢查是否按下數字鍵1來切換攝影機模式
+      if (event.key === '1') {
+        toggleCameraMode();
+        return;
+      }
+      
       if (activeKey) return; // 防止重複觸發
       
       switch (event.key) {
@@ -469,17 +518,24 @@
       }
     });
 
-    // 處理熱成像數據
+    // 處理熱成像數據 - 使用JSON格式
     thermalData.subscribe(function(message) {
-      // 假設消息中包含最高、平均和最低溫度，實際應根據系統設計調整
-      document.getElementById('max-temp').textContent = message.temperature.toFixed(1) + '°C';
-      document.getElementById('avg-temp').textContent = message.variance.toFixed(1) + '°C';
-      document.getElementById('min-temp').textContent = message.variance_covariance.toFixed(1) + '°C';
+      try {
+        // 解析JSON字符串
+        var thermalInfo = JSON.parse(message.data);
+        
+        // 更新最高溫度數據
+        if (thermalInfo.max_temp !== undefined) {
+          document.getElementById('max-temp').textContent = thermalInfo.max_temp.toFixed(1) + '°C';
+        }
+      } catch (e) {
+        console.error('解析熱成像數據時出錯:', e);
+      }
     });
 
     // 處理馬達狀態
     motorStatus.subscribe(function(message) {
-      // 假設消息中包含左右輪馬達的RPM，實際應根據系統設計調整
+      // 假設消息中包含左右輪馬達的RPM
       if (message.name.length >= 2 && message.velocity.length >= 2) {
         document.getElementById('left-motor').textContent = Math.round(message.velocity[0]) + ' RPM';
         document.getElementById('right-motor').textContent = Math.round(message.velocity[1]) + ' RPM';
