@@ -1,3 +1,5 @@
+ROS2指令
+
 Gazebo：
 ros2 launch gazebo_ros gazebo.launch.py world:=/Users/lihong/miniconda3/envs/ros2/dev_ws/src/lihong/worlds/empty.world
 
@@ -46,7 +48,7 @@ Fn + control + F5 / control + ~
 ROS2執行：
 * TURTLEBOT3_MODEL=waffle ros2 launch turtlebot3_gazebo my_world.launch.py world:=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/worlds/fire_detection_world.world
 * ros2 run my_robot_car ball_detector.py
-* ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+* ros2 launch rosbridge_server rosbridge_websocket_launch.xml host:=0.0.0.0
 * ros2 run web_video_server web_video_server
 * python app2.py
 
@@ -110,6 +112,11 @@ ros2 launch huanyu_robot_start Huanyu_robot_start.launch.py
 
 啟動機器人導航節點：
 ros2 launch huanyu_robot_start navigation2.launch.py
+
+啟動機器人導航節點，指定路徑：
+ros2 launch huanyu_robot_start navigation2.launch.py
+map:-/home/playrobot/Desktop/robot_ws/robot_ws/src/huanyu_robot_start/map/map. yaml
+params_file:=/home/playrobot/Desktop/robot_ws/robot_ws/src/huanyu_robot_start/param/nav2 params. yaml
 
 鍵盤控制：
 ros2 run teleop_twist_keyboard teleop_twist_keyboard

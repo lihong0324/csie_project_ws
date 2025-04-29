@@ -13,7 +13,11 @@
     <depend>std_msgs</depend>
     <depend>sensor_msgs</depend>
     
-    <!-- 新增SLAM相關依賴 -->
+    <!-- 新增巡邏節點 patrol_node.py 需要的 -->
+    <depend>rclpy</depend>
+    <depend>geometry_msgs</depend>
+
+    <!-- SLAM 相關依賴 -->
     <depend>nav_msgs</depend>
     <depend>slam_toolbox</depend>
     <depend>nav2_map_server</depend>

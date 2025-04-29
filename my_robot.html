@@ -86,13 +86,16 @@
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      font-size: 16px;
+      font-size: 24px; /* 增大字體尺寸 */
       text-align: center;
       line-height: 80px;
       background-color: #8cbee9d2;
       border: 1px solid black;
       cursor: pointer;
       transition: background-color 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center; /* 確保箭頭居中 */
     }
 
     .control-btn.active {
@@ -117,10 +120,19 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.2s, opacity 0.3s;
+    }
+
+    .action-btn.manual-mode {
+      background-color: #2ecc71; /* 手動控制時的綠色 */
     }
 
     #reset-btn {
       background-color: #5bc0de;
+    }
+
+    #launch-btn {
+      background-color: #d9534f;
     }
 
     .status-panel {
@@ -194,6 +206,15 @@
     #thermal-camera {
       display: none;
     }
+
+    #servo-status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      background-color: #f8f9fa;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -212,16 +233,19 @@
     </div>
 
     <div id="control-panel">
-      <button id="up" class="control-btn"><strong>▲</strong></button>
-      <button id="left" class="control-btn"><strong>◀︎</strong></button>
-      <button id="down" class="control-btn"><strong>▼</strong></button>
-      <button id="right" class="control-btn"><strong>►</strong></button>
+      <button id="up" class="control-btn">▲</button>
+      <button id="left" class="control-btn">◀</button>
+      <button id="down" class="control-btn">▼</button>
+      <button id="right" class="control-btn">►</button>
     </div>
 
     <div class="button-container">
-      <button id="toggle-btn" class="action-btn">切換到自動導航</button>
+      <button id="toggle-btn" class="action-btn">切換到手動控制</button>
       <button id="reset-btn" class="action-btn">馬達歸位</button>
+      <button id="launch-btn" class="action-btn">發射</button>
     </div>
+
+    <div id="servo-status"></div>
 
     <div class="status-panel">
       <div class="status-card">
@@ -269,13 +293,81 @@
   <script src="https://unpkg.com/roslib/build/roslib.min.js"></script>
 
   <script>
+    // 設定伺服馬達 API 的基本 URL
+    // 注意：請根據你的 servo_control.py 伺服器實際運行的 IP 和埠號進行更改
+    const SERVO_API_URL = 'http://192.168.0.106:5001';
+    
     var manualControl = false;
     var lastActiveButton = null; // 用來追蹤最後被按下的按鈕
     var activeKey = null; // 用來追蹤當前的鍵盤按下狀態
     var thermalCameraActive = false; // 追蹤熱成像攝影機狀態
 
+    // 顯示伺服馬達操作狀態
+    function showServoStatus(message, isSuccess = true) {
+      const statusDiv = document.getElementById('servo-status');
+      statusDiv.textContent = message;
+      statusDiv.style.display = 'block';
+      statusDiv.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
+      statusDiv.style.color = isSuccess ? '#155724' : '#721c24';
+      
+      // 5秒後隱藏訊息
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // 馬達歸位 API 呼叫
+    function resetServoMotors() {
+      fetch(`${SERVO_API_URL}/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('馬達歸位成功:', data);
+        showServoStatus(data.message);
+        
+        // 視覺反饋 - 短暫高亮顯示按鈕
+        document.getElementById('reset-btn').style.opacity = '0.7';
+        setTimeout(function() {
+          document.getElementById('reset-btn').style.opacity = '1';
+        }, 300);
+      })
+      .catch(error => {
+        console.error('馬達歸位失敗:', error);
+        showServoStatus('馬達歸位失敗，請稍後再試', false);
+      });
+    }
+
+    // 馬達發射 API 呼叫
+    function launchServoMotors() {
+      fetch(`${SERVO_API_URL}/launch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('馬達發射成功:', data);
+        showServoStatus(data.message);
+        
+        // 視覺反饋 - 短暫高亮顯示按鈕
+        document.getElementById('launch-btn').style.opacity = '0.7';
+        setTimeout(function() {
+          document.getElementById('launch-btn').style.opacity = '1';
+        }, 300);
+      })
+      .catch(error => {
+        console.error('馬達發射失敗:', error);
+        showServoStatus('馬達發射失敗，請稍後再試', false);
+      });
+    }
+
     var ros = new ROSLIB.Ros({
-      url: 'ws://192.168.4.124:9090'
+      url: 'ws://192.168.0.106:9090'
     });
 
     ros.on('connection', function() {
@@ -323,13 +415,6 @@
       ros: ros,
       name: '/odom',
       messageType: 'nav_msgs/Odometry'
-    });
-
-    // 發布馬達歸位命令的Topic
-    var resetMotors = new ROSLIB.Topic({
-      ros: ros,
-      name: '/reset_motors',
-      messageType: 'std_msgs/Empty'
     });
 
     var twist = new ROSLIB.Message({
@@ -420,26 +505,13 @@
       resetButtonStyles();
     }
 
-    // 馬達歸位功能
-    function resetMotorPositions() {
-      var resetMsg = new ROSLIB.Message({});
-      resetMotors.publish(resetMsg);
-      console.log('馬達歸位命令已發送');
-      
-      // 視覺反饋 - 短暫高亮顯示按鈕
-      document.getElementById('reset-btn').style.backgroundColor = '#5bc0de';
-      document.getElementById('reset-btn').style.opacity = '0.7';
-      setTimeout(function() {
-        document.getElementById('reset-btn').style.opacity = '1';
-      }, 300);
-    }
-
     // 設置按鈕點擊事件
     document.getElementById('up').addEventListener('click', function() { toggleMovement('up', this); });
     document.getElementById('down').addEventListener('click', function() { toggleMovement('down', this); });
     document.getElementById('left').addEventListener('click', function() { toggleMovement('left', this); });
     document.getElementById('right').addEventListener('click', function() { toggleMovement('right', this); });
-    document.getElementById('reset-btn').addEventListener('click', function() { resetMotorPositions(); });
+    document.getElementById('reset-btn').addEventListener('click', resetServoMotors);
+    document.getElementById('launch-btn').addEventListener('click', launchServoMotors);
 
     // 鍵盤事件處理
     document.addEventListener('keydown', function(event) {
@@ -469,7 +541,10 @@
           toggleMovement('right', document.getElementById('right'));
           break;
         case 'r':  // 按 R 鍵執行馬達歸位
-          resetMotorPositions();
+          resetServoMotors();
+          break;
+        case 'l':  // 按 L 鍵執行馬達發射
+          launchServoMotors();
           break;
       }
     });
@@ -497,7 +572,15 @@
 
       manualControlTopic.publish(manualControlMsg);
 
+      // 更新按鈕文字
       document.getElementById('toggle-btn').innerText = manualControl ? '切換到自動導航' : '切換到手動控制';
+      
+      // 更新按鈕顏色
+      if (manualControl) {
+        document.getElementById('toggle-btn').classList.add('manual-mode');
+      } else {
+        document.getElementById('toggle-btn').classList.remove('manual-mode');
+      }
     });
 
     // 處理火焰偵測數據
@@ -561,6 +644,10 @@
     // 初始化時試圖連接到所有topic
     window.addEventListener('load', function() {
       console.log('頁面已載入，正在連接到ROS話題...');
+      
+      // 初始化按鈕狀態 - 確保自動/手動控制按鈕顯示正確
+      document.getElementById('toggle-btn').innerText = '切換到手動控制';
+      document.getElementById('toggle-btn').classList.remove('manual-mode');
     });
   </script>
 
