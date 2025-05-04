@@ -10,20 +10,18 @@ find_package(sensor_msgs REQUIRED)
 # 添加 Python 腳本可執行檔
 install(
   PROGRAMS
-    scripts/fire_detection_control_node.py  # 確保這個路徑是正確的
-    scripts/fire_detector_2.py  # 新增這一行
-    scripts/fire_sample.py  # 新增這一行
+    scripts/fire_detection_control_node.py
+    scripts/fire_detector_2.py
+    scripts/fire_sample.py
+    scripts/launcher_controller.py
+    scripts/patrol_node.py  # 新增巡邏腳本
   DESTINATION lib/${PROJECT_NAME}
 )
-# 安裝 Python 腳本
-install(
-    PROGRAMS
-    scripts/launcher_controller.py
-    DESTINATION lib/${PROJECT_NAME}
-)
+
 # 安裝 launch 檔案
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
+
 ament_package()

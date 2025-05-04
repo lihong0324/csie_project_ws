@@ -59,6 +59,20 @@ class FireDetectionAndControlNode(Node):
             qos_profile
         )
         
+        # 創建火焰檢測結果發布者
+        self.flame_detection_pub = self.create_publisher(
+            Bool,
+            '/flame_detection',
+            qos_profile
+        )
+        
+        # 創建熱成像數據發布者
+        self.thermal_data_pub = self.create_publisher(
+            Temperature,
+            '/thermal_data',
+            qos_profile
+        )
+        
         # 初始化CV橋接器用於轉換ROS圖像訊息
         self.bridge = CvBridge()
         
@@ -69,11 +83,7 @@ class FireDetectionAndControlNode(Node):
         self.detection_start_time = None
         self.detection_duration = 0.0
         self.servo_activated = False
-        self.frame = None
         self.fire_position = None
-        
-        # 顯示窗口
-        cv2.namedWindow("Fire Detection View", cv2.WINDOW_NORMAL)
         
         self.get_logger().info('火焰檢測與控制節點已初始化')
         
@@ -99,6 +109,9 @@ class FireDetectionAndControlNode(Node):
             self.get_logger().debug(f'高溫警告: {msg.temperature}°C')
         else:
             self.high_temp_detected = False
+        
+        # 轉發溫度數據到網頁
+        self.thermal_data_pub.publish(msg)
     
     def image_callback(self, data):
         # 如果處於手動控制狀態，不做影像處理
@@ -107,8 +120,8 @@ class FireDetectionAndControlNode(Node):
         
         # 自動導航模式下進行影像處理
         try:
-            self.frame = self.bridge.imgmsg_to_cv2(data, desired_encoding='bgr8')
-            hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
+            frame = self.bridge.imgmsg_to_cv2(data, desired_encoding='bgr8')
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             
             # 定義火焰的顏色範圍
             lower_fire1 = np.array([0, 120, 200])   # 紅色部分
@@ -134,7 +147,6 @@ class FireDetectionAndControlNode(Node):
             if contours:
                 largest_contour = max(contours, key=cv2.contourArea)
                 x, y, w, h = cv2.boundingRect(largest_contour)
-                cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 
                 # 更新火焰位置信息
                 self.fire_position = (x, y, w, h)
@@ -170,29 +182,13 @@ class FireDetectionAndControlNode(Node):
                 # 未偵測到火焰時，原地旋轉
                 twist.angular.z = 0.5
             
-            # 顯示熱成像溫度檢測狀態
-            status_text = f"Temperature > 80°C: {'Yes' if self.high_temp_detected else 'No'}"
-            cv2.putText(self.frame, status_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
-            # 顯示火焰檢測狀態
-            status_text = f"Flame Detected: {'Yes' if self.flame_detected else 'No'}"
-            cv2.putText(self.frame, status_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
-            # 如果同時滿足兩個條件，顯示檢測持續時間
-            if self.high_temp_detected and self.flame_detected:
-                status_text = f"Detection Time: {self.detection_duration:.1f}s"
-                cv2.putText(self.frame, status_text, (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
-            # 顯示馬達狀態
-            status_text = f"Servo Activated: {'Yes' if self.servo_activated else 'No'}"
-            cv2.putText(self.frame, status_text, (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            # 發布火焰檢測狀態給網頁介面
+            flame_msg = Bool()
+            flame_msg.data = self.flame_detected
+            self.flame_detection_pub.publish(flame_msg)
             
             # 發布移動控制命令
             self.cmd_vel_pub.publish(twist)
-            
-            # 顯示影像
-            cv2.imshow("Fire Detection View", self.frame)
-            cv2.waitKey(1)
             
         except Exception as e:
             self.get_logger().error(f'圖像處理錯誤: {str(e)}')
@@ -218,16 +214,6 @@ class FireDetectionAndControlNode(Node):
             if self.detection_duration >= 2.0 and not self.servo_activated:
                 self.activate_servos()
                 self.servo_activated = True
-                
-                # 在畫面中添加警告信息
-                if self.frame is not None and self.fire_position is not None:
-                    x, y, w, h = self.fire_position
-                    warning_text = "FIRE ALERT! SERVOS ACTIVATED!"
-                    cv2.putText(self.frame, warning_text, (x, y - 20), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-                    cv2.imshow("Fire Detection View", self.frame)
-                    cv2.waitKey(1)
-                
                 self.get_logger().info(f'火焰已持續檢測 {self.detection_duration:.2f} 秒, 觸發馬達')
         else:
             # 如果條件不滿足，重置計時器
@@ -264,8 +250,6 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        # 關閉所有CV窗口
-        cv2.destroyAllWindows()
         node.get_logger().info('關閉火焰檢測與控制節點')
         node.destroy_node()
         rclpy.shutdown()

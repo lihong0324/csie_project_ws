@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>伺服馬達控制</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .connection-status {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .connected { background-color: #2ecc71; }
+    .disconnected { background-color: #e74c3c; }
+
+    #connect-btn {
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .slider-container {
+      width: 300px;
+      margin: 20px auto;
+    }
+
+    .slider-group {
+      margin-bottom: 15px;
+    }
+
+    .slider-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .slider {
+      width: 100%;
+    }
+
+    .angle-display {
+      text-align: center;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.2s;
+    }
+
+    #reset-btn {
+      background-color: #5bc0de;
+    }
+
+    #launch-btn {
+      background-color: #f0ad4e;
+    }
+
+    .status-panel {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 20px;
+      background-color: #f5f5f5;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .status-title {
+      margin-top: 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    #status-log {
+      height: 100px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+      font-family: monospace;
+      background-color: #fff;
+    }
+
+    .controls-container {
+      opacity: 0.5;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .controls-container.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+  </style>
+</head>
+<body>
+  <h1>Arduino 伺服馬達控制</h1>
+
+  <div class="connection-status">
+    <div id="status-indicator" class="status-indicator disconnected"></div>
+    <span id="status-text">未連接</span>
+    <button id="connect-btn">連接到 Arduino</button>
+  </div>
+
+  <div id="controls" class="controls-container">
+    <div class="slider-container">
+      <div class="slider-group">
+        <span class="slider-label">左馬達角度控制</span>
+        <input type="range" id="left-slider" class="slider" min="0" max="180" value="90">
+        <div class="angle-display">90°</div>
+      </div>
+      
+      <div class="slider-group">
+        <span class="slider-label">右馬達角度控制</span>
+        <input type="range" id="right-slider" class="slider" min="0" max="180" value="90">
+        <div class="angle-display">90°</div>
+      </div>
+    </div>
+
+    <div class="button-container">
+      <button id="reset-btn" class="action-btn">馬達歸位</button>
+      <button id="launch-btn" class="action-btn">發射!</button>
+    </div>
+  </div>
+
+  <div class="status-panel">
+    <h3 class="status-title">系統狀態</h3>
+    <div id="status-log"></div>
+  </div>
+
+  <script>
+    // Web Serial API 相關變數
+    let port;
+    let writer;
+    let isResetPosition = true; // 用來追蹤是否在歸位狀態
+    
+    // UI 元素
+    const connectBtn = document.getElementById('connect-btn');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const controls = document.getElementById('controls');
+    const statusLog = document.getElementById('status-log');
+    const leftSlider = document.getElementById('left-slider');
+    const rightSlider = document.getElementById('right-slider');
+    const angleDisplays = document.querySelectorAll('.angle-display');
+    const resetBtn = document.getElementById('reset-btn');
+    const launchBtn = document.getElementById('launch-btn');
+    
+    // 馬達角度
+    let leftAngle = 90;
+    let rightAngle = 90;
+    
+    // 檢查瀏覽器支援
+    if ('serial' in navigator) {
+      connectBtn.addEventListener('click', connectToArduino);
+    } else {
+      logStatus('錯誤: 您的瀏覽器不支援 Web Serial API。請使用 Chrome 89+ 或 Edge 89+。');
+      connectBtn.disabled = true;
+    }
+    
+    // 連接到 Arduino
+    async function connectToArduino() {
+      try {
+        // 請求用戶選擇串口
+        port = await navigator.serial.requestPort();
+        
+        // 開啟串口連接
+        await port.open({ baudRate: 9600 });
+        
+        // 創建讀寫器
+        const textEncoder = new TextEncoder();
+        const textDecoder = new TextDecoder();
+        writer = port.writable.getWriter();
+        
+        // 設置讀取器
+        const readableStreamClosed = port.readable.pipeTo(new WritableStream({
+          write(chunk) {
+            const message = textDecoder.decode(chunk);
+            logStatus('收到: ' + message.trim());
+          }
+        }));
+        
+        // 更新 UI
+        statusIndicator.className = 'status-indicator connected';
+        statusText.textContent = '已連接';
+        connectBtn.textContent = '斷開連接';
+        connectBtn.removeEventListener('click', connectToArduino);
+        connectBtn.addEventListener('click', disconnectFromArduino);
+        
+        // 啟用控制界面
+        controls.classList.add('active');
+        
+        logStatus('已成功連接到 Arduino');
+        
+        // 發送初始化命令
+        await sendCommand('RESET');
+        isResetPosition = true;
+        
+      } catch (error) {
+        logStatus('錯誤: ' + error);
+      }
+    }
+    
+    // 斷開與 Arduino 的連接
+    async function disconnectFromArduino() {
+      if (writer) {
+        writer.releaseLock();
+      }
+      
+      if (port && port.readable) {
+        await port.close();
+      }
+      
+      // 更新 UI
+      statusIndicator.className = 'status-indicator disconnected';
+      statusText.textContent = '未連接';
+      connectBtn.textContent = '連接到 Arduino';
+      connectBtn.removeEventListener('click', disconnectFromArduino);
+      connectBtn.addEventListener('click', connectToArduino);
+      
+      // 禁用控制界面
+      controls.classList.remove('active');
+      
+      logStatus('已斷開與 Arduino 的連接');
+    }
+    
+    // 發送命令到 Arduino
+    async function sendCommand(command) {
+      if (writer) {
+        try {
+          const encoder = new TextEncoder();
+          await writer.write(encoder.encode(command + '\n'));
+          logStatus('發送: ' + command);
+          return true;
+        } catch (error) {
+          logStatus('錯誤: 發送命令失敗 - ' + error);
+          return false;
+        }
+      } else {
+        logStatus('錯誤: 未連接到 Arduino');
+        return false;
+      }
+    }
+    
+    function logStatus(message) {
+      const now = new Date();
+      const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      statusLog.innerHTML += `<div>${timestamp} - ${message}</div>`;
+      statusLog.scrollTop = statusLog.scrollHeight;
+      
+      // 保持日誌不要太長
+      if (statusLog.children.length > 50) {
+        statusLog.removeChild(statusLog.children[0]);
+      }
+    }
+    
+    // 更新 UI
+    function updateUI() {
+      leftSlider.value = leftAngle;
+      rightSlider.value = rightAngle;
+      angleDisplays[0].textContent = leftAngle + '°';
+      angleDisplays[1].textContent = rightAngle + '°';
+    }
+    
+    // 發送馬達命令
+    async function sendMotorCommand() {
+      return await sendCommand(`L${leftAngle},R${rightAngle}`);
+    }
+    
+    // 初始化滑桿控制
+    leftSlider.addEventListener('input', function() {
+      leftAngle = parseInt(this.value);
+      angleDisplays[0].textContent = leftAngle + '°';
+      sendMotorCommand();
+      isResetPosition = false;
+    });
+    
+    rightSlider.addEventListener('input', function() {
+      rightAngle = parseInt(this.value);
+      angleDisplays[1].textContent = rightAngle + '°';
+      sendMotorCommand();
+      isResetPosition = false;
+    });
+    
+    resetBtn.addEventListener('click', async function() {
+      // 重置馬達到中間位置
+      leftAngle = 90;
+      rightAngle = 90;
+      updateUI();
+      await sendCommand('RESET');
+      isResetPosition = true;
+      
+      // 視覺反饋 - 短暫高亮顯示按鈕
+      resetBtn.style.opacity = '0.7';
+      setTimeout(function() {
+        resetBtn.style.opacity = '1';
+      }, 300);
+    });
+    
+    launchBtn.addEventListener('click', async function() {
+      if (isResetPosition) {
+        // 發射動作 - 左馬達轉到0度，右馬達轉到180度
+        leftAngle = 0;   // 左馬達往左轉90度 (從90度到0度)
+        rightAngle = 180; // 右馬達往右轉90度 (從90度到180度)
+        updateUI();
+        await sendMotorCommand();
+        logStatus('發射動作已執行!');
+        
+        // 視覺反饋 - 短暫高亮顯示按鈕
+        launchBtn.style.opacity = '0.7';
+        setTimeout(function() {
+          launchBtn.style.opacity = '1';
+        }, 300);
+        
+        isResetPosition = false;
+        
+        // 2秒後自動回到歸位狀態
+        setTimeout(async function() {
+          leftAngle = 90;
+          rightAngle = 90;
+          updateUI();
+          await sendMotorCommand();
+          logStatus('馬達已自動歸位');
+          isResetPosition = true;
+        }, 2000);
+      } else {
+        logStatus('無法發射: 請先將馬達歸位');
+      }
+    });
+    
+    // 鍵盤快捷鍵
+    document.addEventListener('keydown', function(event) {
+      // 只有在連接狀態下才處理鍵盤命令
+      if (!controls.classList.contains('active')) return;
+      
+      switch (event.key) {
+        case 'r':  // 按 R 鍵執行馬達歸位
+          resetBtn.click();
+          break;
+        case ' ':  // 空格鍵執行發射
+          launchBtn.click();
+          event.preventDefault(); // 防止空格鍵滾動頁面
+          break;
+      }
+    });
+    
+    // 頁面載入時記錄
+    window.addEventListener('load', function() {
+      logStatus('頁面已載入，請點擊「連接到 Arduino」按鈕');
+    });
+  </script>
+</body>
+</html>

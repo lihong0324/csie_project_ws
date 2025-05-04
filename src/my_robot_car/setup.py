@@ -11,14 +11,14 @@ setup(
     maintainer='lihong',
     maintainer_email='leo930324@gmail.com',
     description='My Robot Car package',
-    license='TODO: License declaration (e.g. MIT)',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'fire_detection_control = my_robot_car.scripts.fire_detection_control_node:main',
             'fire_detector = my_robot_car.scripts.fire_detector_2:main',
             'fire_sample = my_robot_car.scripts.fire_sample:main',
+            'patrol_node = my_robot_car.scripts.patrol_node:main',  # 新增這行
         ],
     },
-
 )
