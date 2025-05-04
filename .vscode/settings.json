@@ -1,3 +1,5 @@
 {
-    "cmake.sourceDirectory": "/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car"
+    "cmake.sourceDirectory": "/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car",
+    "IDX.aI.enableInlineCompletion": true,
+    "IDX.aI.enableCodebaseIndexing": true
 }
