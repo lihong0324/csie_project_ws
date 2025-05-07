@@ -237,7 +237,7 @@
       <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
       <script>
         // 初始化 ROS 物件來通過 WebSocket 連接到 Rosbridge 伺服器
-        const ros = new ROSLIB.Ros({ url: "ws://192.168.0.106:9090" });
+        const ros = new ROSLIB.Ros({ url: "ws://172.20.10.2:9090" });
         
         ros.on("connection", () => {
           document.getElementById("status").innerHTML = "已連接";
