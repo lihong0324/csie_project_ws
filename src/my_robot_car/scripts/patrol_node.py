@@ -23,7 +23,7 @@ class PatrolBot(Node):
         ]
 
         # 巡邏順序：1→2→3→4→3→5→6（用索引）
-        sequence = [0, 1, 2, 3, 2, 4, 5]
+        sequence = [0, 1, 2, 3, 2, 4, 5, 0]
         self.goals = [all_goals[i] for i in sequence]
 
         self.current_goal_index = 0

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Robot Map Viewer</title>
+  <script src="https://static.robotwebtools.org/eventemitter2/current/eventemitter2.min.js"></script>
+  <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+  <script src="https://static.robotwebtools.org/ros2djs/current/ros2d.min.js"></script>
+  <script src="https://static.robotwebtools.org/nav2djs/current/nav2d.min.js"></script>
+</head>
+<body>
+  <h2>Robot Navigation Map</h2>
+  <div id="map" style="width:800px; height:600px; border:1px solid black;"></div>
+
+  <script type="text/javascript">
+    // 連線到 ROSBridge WebSocket（請替換成你的 IP）
+    var ros = new ROSLIB.Ros({
+      url: 'ws://192.168.0.108:9090' // ← 你的 ROS2 主機 IP
+    });
+
+    ros.on('connection', function() {
+      console.log('Connected to websocket server.');
+    });
+    ros.on('error', function(error) {
+      console.log('Error connecting to websocket server: ', error);
+    });
+    ros.on('close', function() {
+      console.log('Connection to websocket server closed.');
+    });
+
+    // 建立 Viewer 介面
+    var viewer = new ROS2D.Viewer({
+      divID: 'map',
+      width: 800,
+      height: 600
+    });
+
+    // 顯示地圖 + 機器人位置
+    var nav = new NAV2D.OccupancyGridClientNav({
+      ros: ros,
+      rootObject: viewer.scene,
+      viewer: viewer,
+      serverName: '/move_base',  // 若用 nav2 請換成 '/navigate_to_pose'
+      withOrientation: true
+    });
+  </script>
+</body>
+</html>
