@@ -146,6 +146,11 @@ ros2 run nav2_map_server map_saver_cli -f map --ros-args -p save_map_timeout:=10
 執行地圖：
 ros2 launch your_slam_package map_ server. launch. py
 
+導航節點：
+sudo apt install ros-humble-nav2-msgs
+ros2 launch nav2_bringup navigation_launch.py map:=/map.yaml use_sim_time:=false
+ros2 run my_robot_car patrol_node.py
+
 補充資料：
 * 查詢IP位址
 ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'
