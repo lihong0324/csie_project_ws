@@ -219,15 +219,15 @@
 </head>
 <body>
   <div class="page-container">
-    <h1>ROS 2 Robot Control</h1>
+    <h1>ROS 2 機器人控制</h1>
     
     <div class="camera-container">
       <div class="camera-feed">
-        <div class="camera-label" id="camera-mode-label">標準攝像頭</div>
+        <div class="camera-label" id="camera-mode-label">標準攝影機</div>
         <div class="view-toggle-hint">按「1」鍵切換熱成像攝影機</div>
         <div id="main-camera-view">
-          <img id="standard-camera" src="http://192.168.0.103:5000/video_feed_raw" alt="Robot Camera View">
-          <img id="thermal-camera" src="http://192.168.0.103:5000/video_feed_thermal" alt="Thermal Camera View">
+          <img id="standard-camera" src="" alt="機器人攝影機畫面">
+          <img id="thermal-camera" src="" alt="熱成像攝影機畫面">
         </div>
       </div>
     </div>
@@ -293,9 +293,16 @@
   <script src="https://unpkg.com/roslib/build/roslib.min.js"></script>
 
   <script>
-    // 設定伺服馬達 API 的基本 URL
-    // 注意：請根據你的 servo_control.py 伺服器實際運行的 IP 和埠號進行更改
-    const SERVO_API_URL = 'http://192.168.1.173:5001';
+    // API 端點設定
+    const API_ENDPOINTS = {
+      SERVO_CONTROL: 'http://192.168.1.173:5001', // 請根據您的伺服馬達伺服器位址更改
+      ROS_BRIDGE: 'ws://172.20.10.2:9090',        // 請根據您的ROS Bridge伺服器位址更改
+      VIDEO_FEED: 'http://192.168.0.103:5000'     // 請根據您的相機伺服器位址更改
+    };
+
+    // 更新攝影機畫面來源
+    document.getElementById('standard-camera').src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_raw`;
+    document.getElementById('thermal-camera').src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_thermal`;
     
     var manualControl = false;
     var lastActiveButton = null; // 用來追蹤最後被按下的按鈕
@@ -318,7 +325,7 @@
 
     // 馬達歸位 API 呼叫
     function resetServoMotors() {
-      fetch(`${SERVO_API_URL}/reset`, {
+      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/reset`, { // 已修改
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -329,7 +336,7 @@
         console.log('馬達歸位成功:', data);
         showServoStatus(data.message);
         
-        // 視覺反饋 - 短暫高亮顯示按鈕
+        // 視覺回饋 - 短暫高亮顯示按鈕
         document.getElementById('reset-btn').style.opacity = '0.7';
         setTimeout(function() {
           document.getElementById('reset-btn').style.opacity = '1';
@@ -343,7 +350,7 @@
 
     // 馬達發射 API 呼叫
     function launchServoMotors() {
-      fetch(`${SERVO_API_URL}/launch`, {
+      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/launch`, { // 已修改
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -354,7 +361,7 @@
         console.log('馬達發射成功:', data);
         showServoStatus(data.message);
         
-        // 視覺反饋 - 短暫高亮顯示按鈕
+        // 視覺回饋 - 短暫高亮顯示按鈕
         document.getElementById('launch-btn').style.opacity = '0.7';
         setTimeout(function() {
           document.getElementById('launch-btn').style.opacity = '1';
@@ -367,50 +374,50 @@
     }
 
     var ros = new ROSLIB.Ros({
-      url: 'ws://172.20.10.2:9090'
+      url: API_ENDPOINTS.ROS_BRIDGE // 已修改
     });
 
     ros.on('connection', function() {
-      console.log('Connected to ROS');
+      console.log('已連接到 ROS');
     });
 
     ros.on('error', function(error) {
-      console.log('Error connecting to ROS: ', error);
+      console.log('連接到 ROS 時發生錯誤: ', error);
     });
 
     ros.on('close', function() {
-      console.log('Connection to ROS closed');
+      console.log('與 ROS 的連接已關閉');
     });
 
-    // 發布機器人移動命令的Topic
+    // 發布機器人移動命令的 Topic
     var cmdVel = new ROSLIB.Topic({
       ros: ros,
       name: '/cmd_vel',
       messageType: 'geometry_msgs/Twist'
     });
 
-    // 訂閱火焰偵測結果的Topic
+    // 訂閱火焰偵測結果的 Topic
     var flameDetection = new ROSLIB.Topic({
       ros: ros,
       name: '/flame_detection',
       messageType: 'std_msgs/Bool'
     });
 
-    // 訂閱熱成像數據的Topic - 使用JSON
+    // 訂閱熱成像數據的 Topic - 使用JSON
     var thermalData = new ROSLIB.Topic({
       ros: ros,
       name: '/thermal_data',
-      messageType: 'std_msgs/String' // 使用字符串類型傳遞JSON數據
+      messageType: 'std_msgs/String' // 使用字串類型傳遞JSON數據
     });
 
-    // 訂閱馬達狀態的Topic
+    // 訂閱馬達狀態的 Topic
     var motorStatus = new ROSLIB.Topic({
       ros: ros,
       name: '/motor_status',
-      messageType: 'sensor_msgs/JointState' // 假設使用關節狀態消息，實際應根據系統設計調整
+      messageType: 'sensor_msgs/JointState' // 假設使用關節狀態訊息，實際應根據系統設計調整
     });
 
-    // 訂閱機器人位置的Topic
+    // 訂閱機器人位置的 Topic
     var robotPosition = new ROSLIB.Topic({
       ros: ros,
       name: '/odom',
@@ -424,7 +431,7 @@
 
     // 防止方向鍵滾動頁面
     window.addEventListener("keydown", function(e) {
-      // 如果是方向鍵或數字鍵1，阻止默認行為
+      // 如果是方向鍵或數字鍵1，阻止預設行為
       if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "1"].indexOf(e.key) > -1) {
         e.preventDefault();
       }
@@ -444,7 +451,7 @@
       } else {
         standardCamera.style.display = 'block';
         thermalCamera.style.display = 'none';
-        cameraLabel.textContent = '標準攝像頭';
+        cameraLabel.textContent = '標準攝影機';
       }
     }
 
@@ -454,7 +461,7 @@
         lastActiveButton = null;
       }
       
-      // 重置所有按鈕
+      // 重設所有按鈕
       document.getElementById('up').classList.remove('active');
       document.getElementById('down').classList.remove('active');
       document.getElementById('left').classList.remove('active');
@@ -462,7 +469,7 @@
     }
 
     function toggleMovement(direction, button) {
-      // 如果按鈕已經是活動狀態，則停止動作並重置顏色
+      // 如果按鈕已經是活動狀態，則停止動作並重設顏色
       if (lastActiveButton === button) {
         stopMovement();
         return;
@@ -470,7 +477,7 @@
 
       resetButtonStyles();
 
-      // 根據方向設置速度
+      // 根據方向設定速度
       switch (direction) {
         case 'up':
           twist.linear.x = 0.5;
@@ -492,7 +499,7 @@
 
       cmdVel.publish(twist);
 
-      // 設置按鈕顏色
+      // 設定按鈕顏色
       button.classList.add('active');
       lastActiveButton = button;
     }
@@ -505,7 +512,7 @@
       resetButtonStyles();
     }
 
-    // 設置按鈕點擊事件
+    // 設定按鈕點擊事件
     document.getElementById('up').addEventListener('click', function() { toggleMovement('up', this); });
     document.getElementById('down').addEventListener('click', function() { toggleMovement('down', this); });
     document.getElementById('left').addEventListener('click', function() { toggleMovement('left', this); });
@@ -604,7 +611,7 @@
     // 處理熱成像數據 - 使用JSON格式
     thermalData.subscribe(function(message) {
       try {
-        // 解析JSON字符串
+        // 解析JSON字串
         var thermalInfo = JSON.parse(message.data);
         
         // 更新最高溫度數據
@@ -618,7 +625,7 @@
 
     // 處理馬達狀態
     motorStatus.subscribe(function(message) {
-      // 假設消息中包含左右輪馬達的RPM
+      // 假設訊息中包含左右輪馬達的RPM
       if (message.name.length >= 2 && message.velocity.length >= 2) {
         document.getElementById('left-motor').textContent = Math.round(message.velocity[0]) + ' RPM';
         document.getElementById('right-motor').textContent = Math.round(message.velocity[1]) + ' RPM';
