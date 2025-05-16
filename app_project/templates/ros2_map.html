@@ -1,47 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>Robot Map Viewer</title>
-  <script src="https://static.robotwebtools.org/eventemitter2/current/eventemitter2.min.js"></script>
-  <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
-  <script src="https://static.robotwebtools.org/ros2djs/current/ros2d.min.js"></script>
-  <script src="https://static.robotwebtools.org/nav2djs/current/nav2d.min.js"></script>
+  <meta charset="utf-8" />
+  <title>Robot Navigation Map (Nav2 + Costmap)</title>
+
+  <!-- ===== 必要 JS ===== -->
+  <script src="eventemitter2.min.js"></script>
+  <script src="roslib.min.js"></script>
+  <script src="easeljs.min.js"></script>
+  <script src="ros2d.min.js"></script>
+  <script src="nav2d.min.js"></script>
+
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 1rem; }
+    #map  { width: 100%; max-width: 900px; height: 600px; border:1px solid #000; }
+    .status { margin-top: .5rem; font-size: .9rem; color: #555; }
+  </style>
 </head>
+
 <body>
   <h2>Robot Navigation Map</h2>
-  <div id="map" style="width:800px; height:600px; border:1px solid black;"></div>
+  <div id="map"></div>
+  <div class="status" id="status">Connecting…</div>
 
-  <script type="text/javascript">
-    // 連線到 ROSBridge WebSocket（請替換成你的 IP）
-    var ros = new ROSLIB.Ros({
-      url: 'ws://192.168.0.108:9090' // ← 你的 ROS2 主機 IP
-    });
+  <script>
+    /* ---------- 連 ROSBridge ---------- */
+    const ros = new ROSLIB.Ros({ url: "ws://192.168.1.155:9090" });
+    ros.on('connection', () => status('✔ Connected'));
+    ros.on('error', err   => status('✖ Error: ' + err));
+    ros.on('close', ()    => status('✖ Disconnected'));
 
-    ros.on('connection', function() {
-      console.log('Connected to websocket server.');
-    });
-    ros.on('error', function(error) {
-      console.log('Error connecting to websocket server: ', error);
-    });
-    ros.on('close', function() {
-      console.log('Connection to websocket server closed.');
-    });
+    function status(msg){ document.getElementById('status').textContent = msg; }
 
-    // 建立 Viewer 介面
-    var viewer = new ROS2D.Viewer({
-      divID: 'map',
-      width: 800,
+    /* ---------- 建 Viewer (Canvas) ---------- */
+    const viewer = new ROS2D.Viewer({
+      divID : 'map',
+      width : document.getElementById('map').clientWidth,
       height: 600
     });
 
-    // 顯示地圖 + 機器人位置
-    var nav = new NAV2D.OccupancyGridClientNav({
-      ros: ros,
-      rootObject: viewer.scene,
-      viewer: viewer,
-      serverName: '/move_base',  // 若用 nav2 請換成 '/navigate_to_pose'
-      withOrientation: true
+    /* ---------- 主地圖 (/map) ---------- */
+    const gridClient = new ROS2D.OccupancyGridClient({
+      ros        : ros,
+      rootObject : viewer.scene,
+      continuous : true,
+      topic      : '/map'
+    });
+
+    gridClient.on('change', () => {
+      viewer.scaleToDimensions(gridClient.currentGrid.width,
+                               gridClient.currentGrid.height);
+      viewer.shift(gridClient.currentGrid.position.x,
+                   gridClient.currentGrid.position.y);
+    });
+
+    /* ---------- 疊加 Costmap ---------- */
+    function overlayCostmap(topic, rgba) {
+      const costClient = new ROS2D.OccupancyGridClient({
+        ros, topic,
+        rootObject : viewer.scene,
+        continuous : true
+      });
+      costClient.on('change', () => {
+        /* 把 costmap 塗成半透明顏色（覆寫原 draw） */
+        const ctx = costClient.currentGrid.canvas.getContext('2d');
+        const img = ctx.getImageData(0,0,
+                        costClient.currentGrid.canvas.width,
+                        costClient.currentGrid.canvas.height);
+        const [r,g,b,a] = rgba;
+        for (let i=0;i<img.data.length;i+=4){
+          if(img.data[i+3]!==0){            // 只改有值像素
+            img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b; img.data[i+3]=a;
+          }
+        }
+        ctx.putImageData(img,0,0);
+      });
+    }
+    overlayCostmap('/global_costmap/costmap', [  0,150,255,180]); // 青藍
+    overlayCostmap('/local_costmap/costmap' , [255, 50, 50,180]); // 紅
+
+    /* ---------- Nav2D：雙擊送 goal ---------- */
+    const nav = NAV2D.OccupancyGridClientNav({
+      ros        : ros,
+      rootObject : viewer.scene,
+      viewer     : viewer,
+      serverName : '/navigate_to_pose',  // ROS2 Nav2 Action
+      topic      : '/map',
+      withOrientation: true              // 拖拉方向朝向
+    });
+
+    /* ---------- 畫出當前位姿 ---------- */
+    const robot = new ROS2D.ArrowShape({
+      size:0.4, strokeSize:0.05, pulse:true,
+      fillColor: ROS2D.makeColor(0,255,0,0.9)
+    });
+    gridClient.rootObject.addChild(robot);
+
+    const poseSub = new ROSLIB.Topic({
+      ros, name:'/amcl_pose',
+      messageType:'geometry_msgs/msg/PoseWithCovarianceStamped'
+    });
+    poseSub.subscribe(msg=>{
+      const q = msg.pose.pose.orientation,
+            yaw = Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z));
+      robot.x =  msg.pose.pose.position.x;
+      robot.y = -msg.pose.pose.position.y;
+      robot.rotation = -yaw * 180/Math.PI;
     });
   </script>
 </body>

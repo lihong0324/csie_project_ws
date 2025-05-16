@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'ros2_map.html')
+    return send_from_directory('.', 'templates/ros2_map.html')
 
 if __name__ == '__main__':
     # 設定 host 為 0.0.0.0 讓區網內其他裝置可連線
