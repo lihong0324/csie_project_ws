@@ -16,29 +16,25 @@ class PatrolBot(Node):
         self.action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.marker_publisher = self.create_publisher(Marker, '/patrol_markers', 10)
 
-        # 所有的巡邏點座標（x, y）
         all_goals = [
             (1.55, -10.5),   # 1
             (5.81, -7.25),   # 2
             (4.24, -5.05),   # 3
             (0.0706, -8.33), # 4
-            (3.08, -2.85),   # 5
+            (3.32, -2.74),   # 5
             (-1.57, -5.91),  # 6
         ]
-        # 自訂的巡邏順序（index）
         sequence = [0, 1, 2, 3, 2, 4, 5, 4, 1, 0]
         self.goals = [all_goals[i] for i in sequence]
 
         self.current_goal_index = 0
         self.visited_index = 0
-
-        # 每秒檢查一次是否可以送出下一個目標
         self.timer = self.create_timer(1.0, self.send_next_goal)
 
         self.waiting_for_server = True
         self.goal_in_progress = False
 
-        self.get_logger().info("Nav2 巡邏機器人啟動，會在每個點完成後提示並繼續下一個")
+        self.get_logger().info("Nav2 巡邏機器人啟動（不設定朝向）")
 
     def send_next_goal(self):
         if self.waiting_for_server:
@@ -57,41 +53,28 @@ class PatrolBot(Node):
         pose.pose.position.x = x
         pose.pose.position.y = y
 
-        # 設定朝向：朝向下一個點（若存在），否則使用預設方向
-        if self.current_goal_index < len(self.goals) - 1:
-            # 下一個點的座標
-            x2, y2 = self.goals[self.current_goal_index + 1]
-            # 計算從目前點到下一點的 yaw（弧度）
-            yaw = math.atan2(y2 - y, x2 - x)
-            # 將 yaw 轉換為四元數（只需 z, w）
-            pose.pose.orientation.z = math.sin(yaw / 2.0)
-            pose.pose.orientation.w = math.cos(yaw / 2.0)
-            self.get_logger().info(f'第 {self.current_goal_index + 1} 點朝向下一點：yaw={math.degrees(yaw):.2f}°')
-        else:
-            # 最後一點：保持正前方向
-            pose.pose.orientation.w = 1.0
+        # 不設定方向，讓 Nav2 自行決定
+        pose.pose.orientation.w = 1.0
 
-        # 建立導航目標
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose = pose
 
-        self.get_logger().info(f'送出巡邏點 {self.current_goal_index + 1}：({x:.2f}, {y:.2f})')
+        self.get_logger().info(f'巡邏點 {self.current_goal_index + 1}：({x:.2f}, {y:.2f})')
         self.goal_in_progress = True
         self._send_goal_future = self.action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_cb)
         self._send_goal_future.add_done_callback(self.goal_response_cb)
 
     def feedback_cb(self, feedback_msg):
-        # 已移除距離回報（避免過多資訊輸出）
-        pass
+        pass  # 如要開啟：self.get_logger().info(f'尚餘距離：{feedback_msg.feedback.distance_remaining:.2f} m')
 
     def goal_response_cb(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().error('目標被拒絕，將不前進')
+            self.get_logger().error('目標被拒絕')
             self.goal_in_progress = False
             return
 
-        self.get_logger().info('已接受目標，開始導航...')
+        self.get_logger().info('目標已接受，導航中...')
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.result_cb)
 
@@ -100,11 +83,11 @@ class PatrolBot(Node):
         status = result.status
 
         if status == GoalStatus.STATUS_SUCCEEDED:
-            self.get_logger().info('到達目標點！')
+            self.get_logger().info('到達目標點')
             self.publish_marker(self.goals[self.current_goal_index])
             self.current_goal_index += 1
         else:
-            self.get_logger().warn(f'導航失敗（狀態碼：{status}），將再次嘗試同一個點')
+            self.get_logger().warn(f'導航失敗（狀態碼：{status}），將再次嘗試同一點')
 
         self.goal_in_progress = False
 
