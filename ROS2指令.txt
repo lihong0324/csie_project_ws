@@ -47,10 +47,11 @@ Fn + control + F5 / control + ~
 
 ROS2執行：
 * TURTLEBOT3_MODEL=waffle ros2 launch turtlebot3_gazebo my_world.launch.py world:=/Users/lihong/miniconda3/envs/ros2/csie_project_ws/src/my_robot_car/worlds/fire_detection_world.world
-* ros2 run my_robot_car ball_detector.py
-* ros2 launch rosbridge_server rosbridge_websocket_launch.xml host:=0.0.0.0
 * ros2 run web_video_server web_video_server
 * python app2.py
+* ros2 launch rosbridge_server rosbridge_websocket_launch.xml host:=0.0.0.0
+* ros2 run my_robot_car ball_detector.py
+* ros2 run my_robot_car patrol_node.py
 
 Ubuntu機器車：
 * TURTLEBOT3_MODEL=waffle ros2 launch my_robot_car my_world.launch.py world:=/home/playrobot/Downloads/csie_project_ws/src/my_robot_car/worlds/fire_detection_world.world
@@ -154,3 +155,6 @@ ros2 run my_robot_car patrol_node.py
 補充資料：
 * 查詢IP位址
 ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'
+
+軟啟動：
+ctrl + alt + delete

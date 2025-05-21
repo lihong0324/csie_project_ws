@@ -2,59 +2,59 @@
 <html lang="zh">
 <head>
   <meta charset="utf-8" />
-  <title>Robot Navigation Map (Nav2 + Costmap)</title>
+  <title>ROS2 地圖顯示</title>
 
-  <!-- ===== 必要 JS ===== -->
-  <script src="eventemitter2.min.js"></script>
-  <script src="roslib.min.js"></script>
-  <script src="easeljs.min.js"></script>
-  <script src="ros2d.min.js"></script>
-  <script src="nav2d.min.js"></script>
+  <!-- 離線 / CDN JavaScript 套件 -->
+  <script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4.9/lib/eventemitter2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/roslib@1.4.1/build/roslib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/easeljs@1.0.2/lib/easeljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ros2d@0.10.0/build/ros2d.min.js"></script>
 
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; }
-    #map  { width: 100%; max-width: 900px; height: 600px; border:1px solid #000; }
+    #map { width: 100%; max-width: 900px; height: 600px; border:1px solid #000; }
     .status { margin-top: .5rem; font-size: .9rem; color: #555; }
   </style>
 </head>
-
 <body>
   <h2>Robot Navigation Map</h2>
   <div id="map"></div>
   <div class="status" id="status">Connecting…</div>
 
   <script>
-    /* ---------- 連 ROSBridge ---------- */
-    const ros = new ROSLIB.Ros({ url: "ws://192.168.1.155:9090" });
+    // ---------- 連線到 ROSBridge WebSocket ----------
+    const ros = new ROSLIB.Ros({ url: 'ws://192.168.1.144:9090' }); // 改為你的 ROS IP
     ros.on('connection', () => status('✔ Connected'));
-    ros.on('error', err   => status('✖ Error: ' + err));
-    ros.on('close', ()    => status('✖ Disconnected'));
-
+    ros.on('error'     , err => status('✖ Error: ' + err));
+    ros.on('close'     , ()  => status('✖ Disconnected'));
     function status(msg){ document.getElementById('status').textContent = msg; }
 
-    /* ---------- 建 Viewer (Canvas) ---------- */
+    // ---------- 建立地圖 Viewer ----------
     const viewer = new ROS2D.Viewer({
       divID : 'map',
       width : document.getElementById('map').clientWidth,
       height: 600
     });
 
-    /* ---------- 主地圖 (/map) ---------- */
+    // ---------- 顯示主地圖 (/map) ----------
     const gridClient = new ROS2D.OccupancyGridClient({
       ros        : ros,
       rootObject : viewer.scene,
       continuous : true,
       topic      : '/map'
     });
-
     gridClient.on('change', () => {
-      viewer.scaleToDimensions(gridClient.currentGrid.width,
-                               gridClient.currentGrid.height);
-      viewer.shift(gridClient.currentGrid.position.x,
-                   gridClient.currentGrid.position.y);
+      viewer.scaleToDimensions(
+        gridClient.currentGrid.width,
+        gridClient.currentGrid.height
+      );
+      viewer.shift(
+        gridClient.currentGrid.position.x,
+        gridClient.currentGrid.position.y
+      );
     });
 
-    /* ---------- 疊加 Costmap ---------- */
+    // ---------- 疊加 costmap ----------
     function overlayCostmap(topic, rgba) {
       const costClient = new ROS2D.OccupancyGridClient({
         ros, topic,
@@ -62,50 +62,50 @@
         continuous : true
       });
       costClient.on('change', () => {
-        /* 把 costmap 塗成半透明顏色（覆寫原 draw） */
         const ctx = costClient.currentGrid.canvas.getContext('2d');
-        const img = ctx.getImageData(0,0,
-                        costClient.currentGrid.canvas.width,
-                        costClient.currentGrid.canvas.height);
-        const [r,g,b,a] = rgba;
-        for (let i=0;i<img.data.length;i+=4){
-          if(img.data[i+3]!==0){            // 只改有值像素
-            img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b; img.data[i+3]=a;
+        const img = ctx.getImageData(
+          0, 0,
+          costClient.currentGrid.canvas.width,
+          costClient.currentGrid.canvas.height
+        );
+        const [r, g, b, a] = rgba;
+        for (let i = 0; i < img.data.length; i += 4) {
+          if (img.data[i + 3] !== 0) {
+            img.data[i]     = r;
+            img.data[i + 1] = g;
+            img.data[i + 2] = b;
+            img.data[i + 3] = a;
           }
         }
-        ctx.putImageData(img,0,0);
+        ctx.putImageData(img, 0, 0);
       });
     }
     overlayCostmap('/global_costmap/costmap', [  0,150,255,180]); // 青藍
-    overlayCostmap('/local_costmap/costmap' , [255, 50, 50,180]); // 紅
+    overlayCostmap('/local_costmap/costmap' , [255,  50,  50,180]); // 紅
 
-    /* ---------- Nav2D：雙擊送 goal ---------- */
-    const nav = NAV2D.OccupancyGridClientNav({
-      ros        : ros,
-      rootObject : viewer.scene,
-      viewer     : viewer,
-      serverName : '/navigate_to_pose',  // ROS2 Nav2 Action
-      topic      : '/map',
-      withOrientation: true              // 拖拉方向朝向
-    });
-
-    /* ---------- 畫出當前位姿 ---------- */
+    // ---------- 顯示機器人即時位置（/amcl_pose） ----------
     const robot = new ROS2D.ArrowShape({
-      size:0.4, strokeSize:0.05, pulse:true,
-      fillColor: ROS2D.makeColor(0,255,0,0.9)
+      size       : 0.4,
+      strokeSize : 0.05,
+      pulse      : true,
+      fillColor  : ROS2D.makeColor(0,255,0,0.9)
     });
     gridClient.rootObject.addChild(robot);
 
     const poseSub = new ROSLIB.Topic({
-      ros, name:'/amcl_pose',
-      messageType:'geometry_msgs/msg/PoseWithCovarianceStamped'
+      ros         : ros,
+      name        : '/amcl_pose',
+      messageType: 'geometry_msgs/msg/PoseWithCovarianceStamped'
     });
-    poseSub.subscribe(msg=>{
-      const q = msg.pose.pose.orientation,
-            yaw = Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z));
-      robot.x =  msg.pose.pose.position.x;
-      robot.y = -msg.pose.pose.position.y;
-      robot.rotation = -yaw * 180/Math.PI;
+    poseSub.subscribe(msg => {
+      const q   = msg.pose.pose.orientation;
+      const yaw = Math.atan2(
+        2 * (q.w*q.z + q.x*q.y),
+        1 - 2 * (q.y*q.y + q.z*q.z)
+      );
+      robot.x        = msg.pose.pose.position.x;
+      robot.y        = -msg.pose.pose.position.y;  // Y軸反向
+      robot.rotation = -yaw * 180 / Math.PI;
     });
   </script>
 </body>

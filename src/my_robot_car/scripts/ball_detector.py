@@ -76,7 +76,7 @@ class BallDetector(Node):
                 self.get_logger().info(f'偵測到紅球位置: [{int(cx)}, {int(cy)}], 寬度: {w}')
 
                 image_center_x = self.image_width / 2
-                tolerance = self.image_width * 0.05 
+                tolerance = self.image_width * 0.10  # 擴大容許偏移範圍至 10%
                 left = image_center_x - tolerance
                 right = image_center_x + tolerance
 
@@ -85,10 +85,10 @@ class BallDetector(Node):
                     twist.linear.x = 0.0
                     self.get_logger().info('紅球在中央，完全停止')
                 elif cx < left:
-                    twist.angular.z = 0.3
+                    twist.angular.z = 0.15  # 減小轉速
                     self.get_logger().info('紅球在左側，左轉')
                 else:
-                    twist.angular.z = -0.3
+                    twist.angular.z = -0.15  # 減小轉速
                     self.get_logger().info('紅球在右側，右轉')
 
                 if w < 100:

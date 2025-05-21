@@ -12,7 +12,7 @@ install(
   PROGRAMS
     scripts/fire_detection_control_node.py
     scripts/ball_detector.py
-    scripts/fire_sample.py
+    scripts/flame_tracker.py
     scripts/launcher_controller.py
     scripts/patrol_node.py  # 新增巡邏腳本
   DESTINATION lib/${PROJECT_NAME}

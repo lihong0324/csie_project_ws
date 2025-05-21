@@ -17,7 +17,7 @@ setup(
         'console_scripts': [
             'fire_detection_control_node = my_robot_car.scripts.fire_detection_control_node:main',
             'ball_detector = my_robot_car.scripts.ball_detector:main',
-            'fire_sample = my_robot_car.scripts.fire_sample:main',
+            'fire_sample = my_robot_car.scripts.flame_tracker:main',
             'patrol_node = my_robot_car.scripts.patrol_node:main',  # 新增這行
         ],
     },
