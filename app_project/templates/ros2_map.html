@@ -1,112 +1,365 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="utf-8" />
-  <title>ROS2 地圖顯示</title>
-
-  <!-- 離線 / CDN JavaScript 套件 -->
-  <script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4.9/lib/eventemitter2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/roslib@1.4.1/build/roslib.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/easeljs@1.0.2/lib/easeljs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ros2d@0.10.0/build/ros2d.min.js"></script>
-
-  <style>
-    body { font-family: sans-serif; margin: 0; padding: 1rem; }
-    #map { width: 100%; max-width: 900px; height: 600px; border:1px solid #000; }
-    .status { margin-top: .5rem; font-size: .9rem; color: #555; }
-  </style>
+    <meta charset="utf-8" />
+    <title>ROS2 地圖顯示 + Costmap</title>
+    
+    <!-- 使用更穩定的CDN版本 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/eventemitter2/6.4.9/eventemitter2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/roslib/1.3.0/roslib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/EaselJS/1.0.2/easeljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ros2d/0.9.0/ros2d.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 1rem; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #map { 
+            width: 100%; 
+            height: 600px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px;
+            background: #f8f8f8;
+        }
+        .status { 
+            margin-top: 15px; 
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.connected { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.connecting { background: #d1ecf1; color: #0c5460; }
+        
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        label {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
-  <h2>Robot Navigation Map</h2>
-  <div id="map"></div>
-  <div class="status" id="status">Connecting…</div>
+    <div class="container">
+        <h2>Robot Navigation Map</h2>
+        <div id="map"></div>
+        <div class="status connecting" id="status">正在連接到 ROS...</div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <input type="checkbox" id="showGlobalCostmap" checked>
+                <label for="showGlobalCostmap">顯示全域代價地圖</label>
+            </div>
+            <div class="control-group">
+                <input type="checkbox" id="showLocalCostmap" checked>
+                <label for="showLocalCostmap">顯示局部代價地圖</label>
+            </div>
+            <button onclick="resetView()">重置視圖</button>
+            <button onclick="reconnect()">重新連接</button>
+        </div>
+    </div>
 
-  <script>
-    // ---------- 連線到 ROSBridge WebSocket ----------
-    const ros = new ROSLIB.Ros({ url: 'ws://192.168.1.144:9090' }); // 改為你的 ROS IP
-    ros.on('connection', () => status('✔ Connected'));
-    ros.on('error'     , err => status('✖ Error: ' + err));
-    ros.on('close'     , ()  => status('✖ Disconnected'));
-    function status(msg){ document.getElementById('status').textContent = msg; }
-
-    // ---------- 建立地圖 Viewer ----------
-    const viewer = new ROS2D.Viewer({
-      divID : 'map',
-      width : document.getElementById('map').clientWidth,
-      height: 600
-    });
-
-    // ---------- 顯示主地圖 (/map) ----------
-    const gridClient = new ROS2D.OccupancyGridClient({
-      ros        : ros,
-      rootObject : viewer.scene,
-      continuous : true,
-      topic      : '/map'
-    });
-    gridClient.on('change', () => {
-      viewer.scaleToDimensions(
-        gridClient.currentGrid.width,
-        gridClient.currentGrid.height
-      );
-      viewer.shift(
-        gridClient.currentGrid.position.x,
-        gridClient.currentGrid.position.y
-      );
-    });
-
-    // ---------- 疊加 costmap ----------
-    function overlayCostmap(topic, rgba) {
-      const costClient = new ROS2D.OccupancyGridClient({
-        ros, topic,
-        rootObject : viewer.scene,
-        continuous : true
-      });
-      costClient.on('change', () => {
-        const ctx = costClient.currentGrid.canvas.getContext('2d');
-        const img = ctx.getImageData(
-          0, 0,
-          costClient.currentGrid.canvas.width,
-          costClient.currentGrid.canvas.height
-        );
-        const [r, g, b, a] = rgba;
-        for (let i = 0; i < img.data.length; i += 4) {
-          if (img.data[i + 3] !== 0) {
-            img.data[i]     = r;
-            img.data[i + 1] = g;
-            img.data[i + 2] = b;
-            img.data[i + 3] = a;
-          }
+    <script>
+        let ros, viewer, gridClient, robot;
+        let globalCostmapClient, localCostmapClient;
+        let isConnected = false;
+        
+        // ROS連接設定
+        const ROS_URL = 'ws://192.168.1.144:9090';
+        
+        function updateStatus(message, type = 'connecting') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
         }
-        ctx.putImageData(img, 0, 0);
-      });
-    }
-    overlayCostmap('/global_costmap/costmap', [  0,150,255,180]); // 青藍
-    overlayCostmap('/local_costmap/costmap' , [255,  50,  50,180]); // 紅
-
-    // ---------- 顯示機器人即時位置（/amcl_pose） ----------
-    const robot = new ROS2D.ArrowShape({
-      size       : 0.4,
-      strokeSize : 0.05,
-      pulse      : true,
-      fillColor  : ROS2D.makeColor(0,255,0,0.9)
-    });
-    gridClient.rootObject.addChild(robot);
-
-    const poseSub = new ROSLIB.Topic({
-      ros         : ros,
-      name        : '/amcl_pose',
-      messageType: 'geometry_msgs/msg/PoseWithCovarianceStamped'
-    });
-    poseSub.subscribe(msg => {
-      const q   = msg.pose.pose.orientation;
-      const yaw = Math.atan2(
-        2 * (q.w*q.z + q.x*q.y),
-        1 - 2 * (q.y*q.y + q.z*q.z)
-      );
-      robot.x        = msg.pose.pose.position.x;
-      robot.y        = -msg.pose.pose.position.y;  // Y軸反向
-      robot.rotation = -yaw * 180 / Math.PI;
-    });
-  </script>
+        
+        function initROS() {
+            // 檢查所需的庫是否已載入
+            if (typeof ROSLIB === 'undefined') {
+                updateStatus('ROSLIB 未載入', 'error');
+                return;
+            }
+            if (typeof ROS2D === 'undefined') {
+                updateStatus('ROS2D 未載入', 'error');
+                return;
+            }
+            if (typeof createjs === 'undefined') {
+                updateStatus('EaselJS 未載入', 'error');
+                return;
+            }
+            
+            try {
+                // 建立ROS連接
+                ros = new ROSLIB.Ros({ url: ROS_URL });
+                
+                ros.on('connection', () => {
+                    isConnected = true;
+                    updateStatus('已連接到 ROS', 'connected');
+                    initViewer();
+                });
+                
+                ros.on('error', (error) => {
+                    isConnected = false;
+                    updateStatus(`連接錯誤: ${error}`, 'error');
+                    console.error('ROS連接錯誤:', error);
+                });
+                
+                ros.on('close', () => {
+                    isConnected = false;
+                    updateStatus('連接已中斷', 'error');
+                });
+                
+            } catch (error) {
+                updateStatus(`初始化失敗: ${error.message}`, 'error');
+                console.error('ROS初始化錯誤:', error);
+            }
+        }
+        
+        function initViewer() {
+            try {
+                // 建立2D查看器
+                viewer = new ROS2D.Viewer({
+                    divID: 'map',
+                    width: document.getElementById('map').clientWidth,
+                    height: 600
+                });
+                
+                // 載入靜態地圖
+                initStaticMap();
+                
+                // 載入代價地圖
+                initCostmaps();
+                
+                // 顯示機器人位置
+                initRobotPose();
+                
+            } catch (error) {
+                updateStatus(`地圖初始化失敗: ${error.message}`, 'error');
+                console.error('地圖初始化錯誤:', error);
+            }
+        }
+        
+        function initStaticMap() {
+            gridClient = new ROS2D.OccupancyGridClient({
+                ros: ros,
+                rootObject: viewer.scene,
+                topic: '/map',
+                continuous: true
+            });
+            
+            gridClient.on('change', () => {
+                if (gridClient.currentGrid) {
+                    viewer.scaleToDimensions(
+                        gridClient.currentGrid.width,
+                        gridClient.currentGrid.height
+                    );
+                    viewer.shift(
+                        gridClient.currentGrid.position.x,
+                        gridClient.currentGrid.position.y
+                    );
+                }
+            });
+        }
+        
+        function initCostmaps() {
+            // 全域代價地圖
+            try {
+                globalCostmapClient = new ROS2D.OccupancyGridClient({
+                    ros: ros,
+                    topic: '/global_costmap/costmap',
+                    rootObject: viewer.scene,
+                    continuous: true
+                });
+                
+                globalCostmapClient.on('change', () => {
+                    if (globalCostmapClient.currentGrid) {
+                        applyCostmapColor(globalCostmapClient.currentGrid, [0, 150, 255, 180]);
+                    }
+                });
+            } catch (error) {
+                console.warn('全域代價地圖載入失敗:', error);
+            }
+            
+            // 局部代價地圖
+            try {
+                localCostmapClient = new ROS2D.OccupancyGridClient({
+                    ros: ros,
+                    topic: '/local_costmap/costmap',
+                    rootObject: viewer.scene,
+                    continuous: true
+                });
+                
+                localCostmapClient.on('change', () => {
+                    if (localCostmapClient.currentGrid) {
+                        applyCostmapColor(localCostmapClient.currentGrid, [255, 50, 50, 180]);
+                    }
+                });
+            } catch (error) {
+                console.warn('局部代價地圖載入失敗:', error);
+            }
+        }
+        
+        function applyCostmapColor(grid, rgba) {
+            try {
+                const canvas = grid.canvas;
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                const [r, g, b, a] = rgba;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] !== 0) { // 如果像素不透明
+                        data[i] = r;     // Red
+                        data[i + 1] = g; // Green
+                        data[i + 2] = b; // Blue
+                        data[i + 3] = a; // Alpha
+                    }
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            } catch (error) {
+                console.warn('代價地圖顏色應用失敗:', error);
+            }
+        }
+        
+        function initRobotPose() {
+            try {
+                // 建立機器人箭頭
+                robot = new ROS2D.ArrowShape({
+                    size: 0.5,
+                    strokeSize: 0.05,
+                    pulse: true,
+                    fillColor: createjs.Graphics.getRGB(0, 255, 0, 0.9)
+                });
+                
+                if (gridClient && gridClient.rootObject) {
+                    gridClient.rootObject.addChild(robot);
+                }
+                
+                // 訂閱機器人位置
+                const poseListener = new ROSLIB.Topic({
+                    ros: ros,
+                    name: '/amcl_pose',
+                    messageType: 'geometry_msgs/msg/PoseWithCovarianceStamped'
+                });
+                
+                poseListener.subscribe((message) => {
+                    if (robot && message.pose && message.pose.pose) {
+                        const pose = message.pose.pose;
+                        const q = pose.orientation;
+                        
+                        // 計算偏航角
+                        const yaw = Math.atan2(
+                            2 * (q.w * q.z + q.x * q.y),
+                            1 - 2 * (q.y * q.y + q.z * q.z)
+                        );
+                        
+                        robot.x = pose.position.x;
+                        robot.y = -pose.position.y; // Y軸反向
+                        robot.rotation = -yaw * 180 / Math.PI;
+                    }
+                });
+                
+            } catch (error) {
+                console.warn('機器人位置初始化失敗:', error);
+            }
+        }
+        
+        // 控制函數
+        function resetView() {
+            if (viewer && gridClient && gridClient.currentGrid) {
+                viewer.scaleToDimensions(
+                    gridClient.currentGrid.width,
+                    gridClient.currentGrid.height
+                );
+                viewer.shift(
+                    gridClient.currentGrid.position.x,
+                    gridClient.currentGrid.position.y
+                );
+            }
+        }
+        
+        function reconnect() {
+            if (ros) {
+                ros.close();
+            }
+            setTimeout(initROS, 1000);
+        }
+        
+        // 切換代價地圖顯示
+        document.getElementById('showGlobalCostmap').addEventListener('change', (e) => {
+            if (globalCostmapClient && globalCostmapClient.currentGrid) {
+                globalCostmapClient.currentGrid.visible = e.target.checked;
+            }
+        });
+        
+        document.getElementById('showLocalCostmap').addEventListener('change', (e) => {
+            if (localCostmapClient && localCostmapClient.currentGrid) {
+                localCostmapClient.currentGrid.visible = e.target.checked;
+            }
+        });
+        
+        // 頁面載入完成後初始化
+        window.addEventListener('load', () => {
+            setTimeout(initROS, 500); // 給庫一些時間載入
+        });
+        
+        // 視窗大小改變時調整地圖
+        window.addEventListener('resize', () => {
+            if (viewer) {
+                resetView();
+            }
+        });
+    </script>
 </body>
 </html>
