@@ -2,74 +2,126 @@
 <html lang="zh">
 <head>
     <meta charset="utf-8" />
-    <title>ROS2 地圖顯示 + Costmap</title>
+    <title>ROS2 地圖顯示系統</title>
     
-    <!-- 使用更穩定的CDN版本 -->
+    <!-- 修復 roslib 載入問題 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/eventemitter2/6.4.9/eventemitter2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/roslib/1.3.0/roslib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/EaselJS/1.0.2/easeljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ros2d/0.9.0/ros2d.min.js"></script>
     
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 1rem; 
-            background: #f5f5f5;
+            margin: 0; 
+            padding: 20px;
+            background: #f0f2f5;
         }
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
             text-align: center;
         }
-        #map { 
-            width: 100%; 
-            height: 600px; 
-            border: 2px solid #ddd; 
-            border-radius: 8px;
-            background: #f8f8f8;
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 300;
         }
-        .status { 
-            margin-top: 15px; 
-            padding: 10px;
+        
+        .connection-settings {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .input-group input {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            font-weight: bold;
+            font-size: 14px;
         }
+        
+        .map-container {
+            position: relative;
+            margin: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+        
+        #mapCanvas {
+            display: block;
+            width: 100%;
+            height: 600px;
+            cursor: move;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
         .status.connected { background: #d4edda; color: #155724; }
         .status.error { background: #f8d7da; color: #721c24; }
         .status.connecting { background: #d1ecf1; color: #0c5460; }
         
-        .controls {
-            margin-top: 15px;
+        .button-group {
             display: flex;
             gap: 10px;
             align-items: center;
         }
         
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
         button {
             padding: 8px 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             background: #007bff;
             color: white;
             cursor: pointer;
             font-size: 14px;
+            transition: background 0.2s;
         }
         
-        button:hover {
+        button:hover:not(:disabled) {
             background: #0056b3;
         }
         
@@ -78,287 +130,558 @@
             cursor: not-allowed;
         }
         
-        input[type="checkbox"] {
-            margin-right: 5px;
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        label {
-            font-size: 14px;
-            color: #555;
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 180px;
+        }
+        
+        .robot-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .debug-panel {
+            margin: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .debug-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .debug-info {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Robot Navigation Map</h2>
-        <div id="map"></div>
-        <div class="status connecting" id="status">正在連接到 ROS...</div>
+        <div class="header">
+            <h1>ROS2 機器人導航地圖</h1>
+        </div>
+        
+        <div class="connection-settings">
+            <div class="input-group">
+                <label for="rosIP">ROS IP:</label>
+                <input type="text" id="rosIP" value="172.20.10.2" placeholder="輸入ROS主機IP">
+            </div>
+            <div class="input-group">
+                <label for="rosPort">埠號:</label>
+                <input type="text" id="rosPort" value="9090" placeholder="9090">
+            </div>
+            <button onclick="updateConnection()">更新連接</button>
+        </div>
+        
+        <div class="map-container">
+            <canvas id="mapCanvas"></canvas>
+            
+            <div class="info-panel">
+                <div><strong>地圖資訊</strong></div>
+                <div>尺寸: <span id="mapSize">-</span></div>
+                <div>解析度: <span id="mapResolution">-</span></div>
+                <div>原點: <span id="mapOrigin">-</span></div>
+                
+                <div class="robot-info">
+                    <div><strong>機器人位置</strong></div>
+                    <div>X: <span id="robotX">-</span></div>
+                    <div>Y: <span id="robotY">-</span></div>
+                    <div>角度: <span id="robotYaw">-</span>°</div>
+                </div>
+            </div>
+        </div>
         
         <div class="controls">
-            <div class="control-group">
-                <input type="checkbox" id="showGlobalCostmap" checked>
-                <label for="showGlobalCostmap">顯示全域代價地圖</label>
+            <div class="status connecting" id="status">正在初始化...</div>
+            
+            <div class="button-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showRobot" checked>
+                    <label for="showRobot">顯示機器人</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showPath" checked>
+                    <label for="showPath">顯示路徑</label>
+                </div>
+                
+                <button onclick="resetView()">重置視圖</button>
+                <button onclick="saveMap()">保存地圖</button>
+                <button onclick="reconnect()">重新連接</button>
             </div>
-            <div class="control-group">
-                <input type="checkbox" id="showLocalCostmap" checked>
-                <label for="showLocalCostmap">顯示局部代價地圖</label>
-            </div>
-            <button onclick="resetView()">重置視圖</button>
-            <button onclick="reconnect()">重新連接</button>
+        </div>
+        
+        <div class="debug-panel">
+            <h3>連接狀態</h3>
+            <div class="debug-info" id="debugInfo">檢查 ROSLIB 載入狀態...</div>
         </div>
     </div>
 
     <script>
-        let ros, viewer, gridClient, robot;
-        let globalCostmapClient, localCostmapClient;
-        let isConnected = false;
-        
-        // ROS連接設定
-        const ROS_URL = 'ws://192.168.1.144:9090';
-        
-        function updateStatus(message, type = 'connecting') {
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.className = `status ${type}`;
+        // 檢查依賴庫載入狀態
+        function checkDependencies() {
+            const debugEl = document.getElementById('debugInfo');
+            let debugInfo = '';
+            
+            debugInfo += `ROSLIB 載入狀態: ${typeof ROSLIB !== 'undefined' ? '✅ 成功' : '❌ 失敗'}\n`;
+            debugInfo += `EventEmitter2 載入狀態: ${typeof EventEmitter2 !== 'undefined' ? '✅ 成功' : '❌ 失敗'}\n`;
+            debugInfo += `當前時間: ${new Date().toLocaleString()}\n`;
+            
+            debugEl.textContent = debugInfo;
+            
+            return typeof ROSLIB !== 'undefined';
         }
         
-        function initROS() {
-            // 檢查所需的庫是否已載入
-            if (typeof ROSLIB === 'undefined') {
-                updateStatus('ROSLIB 未載入', 'error');
-                return;
-            }
-            if (typeof ROS2D === 'undefined') {
-                updateStatus('ROS2D 未載入', 'error');
-                return;
-            }
-            if (typeof createjs === 'undefined') {
-                updateStatus('EaselJS 未載入', 'error');
-                return;
+        class ROS2MapViewer {
+            constructor() {
+                this.canvas = document.getElementById('mapCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.ros = null;
+                this.isConnected = false;
+                
+                // 地圖數據
+                this.mapData = null;
+                this.mapInfo = null;
+                
+                // 機器人狀態
+                this.robotPose = { x: 0, y: 0, yaw: 0 };
+                this.robotPath = [];
+                
+                // 視圖控制
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.isDragging = false;
+                this.lastMouseX = 0;
+                this.lastMouseY = 0;
+                
+                this.initCanvas();
+                this.initEventListeners();
+                
+                // 延遲連接以確保依賴庫載入完成
+                setTimeout(() => {
+                    if (checkDependencies()) {
+                        this.connectToROS();
+                    } else {
+                        this.updateStatus('❌ 依賴庫載入失敗', 'error');
+                        this.updateDebugInfo('請檢查網路連接或嘗試重新整理頁面');
+                    }
+                }, 1000);
             }
             
-            try {
-                // 建立ROS連接
-                ros = new ROSLIB.Ros({ url: ROS_URL });
+            initCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth - 4;
+                this.canvas.height = 600;
                 
-                ros.on('connection', () => {
-                    isConnected = true;
-                    updateStatus('已連接到 ROS', 'connected');
-                    initViewer();
-                });
-                
-                ros.on('error', (error) => {
-                    isConnected = false;
-                    updateStatus(`連接錯誤: ${error}`, 'error');
-                    console.error('ROS連接錯誤:', error);
-                });
-                
-                ros.on('close', () => {
-                    isConnected = false;
-                    updateStatus('連接已中斷', 'error');
-                });
-                
-            } catch (error) {
-                updateStatus(`初始化失敗: ${error.message}`, 'error');
-                console.error('ROS初始化錯誤:', error);
+                this.ctx.fillStyle = '#f0f0f0';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = '#333';
+                this.ctx.font = '16px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('等待連接到 ROS...', this.canvas.width/2, this.canvas.height/2);
             }
-        }
-        
-        function initViewer() {
-            try {
-                // 建立2D查看器
-                viewer = new ROS2D.Viewer({
-                    divID: 'map',
-                    width: document.getElementById('map').clientWidth,
-                    height: 600
-                });
-                
-                // 載入靜態地圖
-                initStaticMap();
-                
-                // 載入代價地圖
-                initCostmaps();
-                
-                // 顯示機器人位置
-                initRobotPose();
-                
-            } catch (error) {
-                updateStatus(`地圖初始化失敗: ${error.message}`, 'error');
-                console.error('地圖初始化錯誤:', error);
-            }
-        }
-        
-        function initStaticMap() {
-            gridClient = new ROS2D.OccupancyGridClient({
-                ros: ros,
-                rootObject: viewer.scene,
-                topic: '/map',
-                continuous: true
-            });
             
-            gridClient.on('change', () => {
-                if (gridClient.currentGrid) {
-                    viewer.scaleToDimensions(
-                        gridClient.currentGrid.width,
-                        gridClient.currentGrid.height
-                    );
-                    viewer.shift(
-                        gridClient.currentGrid.position.x,
-                        gridClient.currentGrid.position.y
-                    );
+            initEventListeners() {
+                this.canvas.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.lastMouseX = e.clientX;
+                    this.lastMouseY = e.clientY;
+                });
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        const deltaX = e.clientX - this.lastMouseX;
+                        const deltaY = e.clientY - this.lastMouseY;
+                        this.offsetX += deltaX;
+                        this.offsetY += deltaY;
+                        this.lastMouseX = e.clientX;
+                        this.lastMouseY = e.clientY;
+                        this.render();
+                    }
+                });
+                
+                this.canvas.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                });
+                
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                    this.scale *= scaleFactor;
+                    this.scale = Math.max(0.1, Math.min(10, this.scale));
+                    this.render();
+                });
+                
+                window.addEventListener('resize', () => {
+                    this.initCanvas();
+                    this.render();
+                });
+            }
+            
+            connectToROS() {
+                const ip = document.getElementById('rosIP').value || '172.20.10.2';
+                const port = document.getElementById('rosPort').value || '9090';
+                const wsUrl = `ws://${ip}:${port}`;
+                
+                this.updateStatus('正在連接到 ROS...', 'connecting');
+                this.updateDebugInfo(`嘗試連接到: ${wsUrl}`);
+                
+                try {
+                    this.ros = new ROSLIB.Ros({
+                        url: wsUrl
+                    });
+                    
+                    this.ros.on('connection', () => {
+                        this.isConnected = true;
+                        this.updateStatus('✅ 已連接', 'connected');
+                        this.updateDebugInfo(`成功連接到 ${wsUrl}\n開始訂閱主題...`);
+                        this.subscribeToTopics();
+                    });
+                    
+                    this.ros.on('error', (error) => {
+                        this.isConnected = false;
+                        this.updateStatus(`❌ 連接錯誤`, 'error');
+                        this.updateDebugInfo(`連接錯誤: ${error}\n請檢查:\n1. ROS主機IP是否正確\n2. rosbridge_server是否運行\n3. 防火牆設定\n4. 網路連通性`);
+                        console.error('ROS連接錯誤:', error);
+                    });
+                    
+                    this.ros.on('close', () => {
+                        this.isConnected = false;
+                        this.updateStatus('⚠️ 連接中斷', 'error');
+                        this.updateDebugInfo('連接已中斷，嘗試重新連接...');
+                    });
+                    
+                } catch (error) {
+                    this.updateStatus('❌ 連接失敗', 'error');
+                    this.updateDebugInfo(`連接異常: ${error.message}`);
+                    console.error('ROS連接異常:', error);
                 }
-            });
-        }
-        
-        function initCostmaps() {
-            // 全域代價地圖
-            try {
-                globalCostmapClient = new ROS2D.OccupancyGridClient({
-                    ros: ros,
-                    topic: '/global_costmap/costmap',
-                    rootObject: viewer.scene,
-                    continuous: true
-                });
-                
-                globalCostmapClient.on('change', () => {
-                    if (globalCostmapClient.currentGrid) {
-                        applyCostmapColor(globalCostmapClient.currentGrid, [0, 150, 255, 180]);
-                    }
-                });
-            } catch (error) {
-                console.warn('全域代價地圖載入失敗:', error);
             }
             
-            // 局部代價地圖
-            try {
-                localCostmapClient = new ROS2D.OccupancyGridClient({
-                    ros: ros,
-                    topic: '/local_costmap/costmap',
-                    rootObject: viewer.scene,
-                    continuous: true
-                });
-                
-                localCostmapClient.on('change', () => {
-                    if (localCostmapClient.currentGrid) {
-                        applyCostmapColor(localCostmapClient.currentGrid, [255, 50, 50, 180]);
-                    }
-                });
-            } catch (error) {
-                console.warn('局部代價地圖載入失敗:', error);
+            subscribeToTopics() {
+                try {
+                    // 訂閱地圖
+                    const mapTopic = new ROSLIB.Topic({
+                        ros: this.ros,
+                        name: '/map',
+                        messageType: 'nav_msgs/msg/OccupancyGrid'
+                    });
+                    
+                    mapTopic.subscribe((message) => {
+                        this.handleMapMessage(message);
+                        this.updateDebugInfo('收到地圖數據');
+                    });
+                    
+                    // 訂閱機器人位置
+                    const poseTopic = new ROSLIB.Topic({
+                        ros: this.ros,
+                        name: '/amcl_pose',
+                        messageType: 'geometry_msgs/msg/PoseWithCovarianceStamped'
+                    });
+                    
+                    poseTopic.subscribe((message) => {
+                        this.handlePoseMessage(message);
+                    });
+                    
+                    // 也嘗試 /robot_pose 主題
+                    const robotPoseTopic = new ROSLIB.Topic({
+                        ros: this.ros,
+                        name: '/robot_pose',
+                        messageType: 'geometry_msgs/msg/PoseStamped'
+                    });
+                    
+                    robotPoseTopic.subscribe((message) => {
+                        this.handleRobotPoseMessage(message);
+                    });
+                    
+                    this.updateDebugInfo('已訂閱主題: /map, /amcl_pose, /robot_pose');
+                    
+                    // 請求地圖數據
+                    setTimeout(() => {
+                        this.requestStaticMap();
+                    }, 2000);
+                    
+                } catch (error) {
+                    this.updateDebugInfo(`訂閱主題時發生錯誤: ${error.message}`);
+                    console.error('訂閱主題錯誤:', error);
+                }
             }
-        }
-        
-        function applyCostmapColor(grid, rgba) {
-            try {
-                const canvas = grid.canvas;
-                const ctx = canvas.getContext('2d');
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            requestStaticMap() {
+                try {
+                    const mapService = new ROSLIB.Service({
+                        ros: this.ros,
+                        name: '/static_map',
+                        serviceType: 'nav_msgs/srv/GetMap'
+                    });
+                    
+                    const request = new ROSLIB.ServiceRequest({});
+                    
+                    mapService.callService(request, 
+                        (result) => {
+                            if (result && result.map) {
+                                this.handleMapMessage(result.map);
+                                this.updateDebugInfo('從 /static_map 服務獲取地圖成功');
+                            }
+                        },
+                        (error) => {
+                            this.updateDebugInfo(`/static_map 服務調用失敗: ${error}`);
+                            console.warn('static_map服務不可用:', error);
+                        }
+                    );
+                } catch (error) {
+                    this.updateDebugInfo(`調用 /static_map 服務時發生錯誤: ${error.message}`);
+                    console.error('static_map服務錯誤:', error);
+                }
+            }
+            
+            handleMapMessage(mapMsg) {
+                this.mapInfo = mapMsg.info;
+                this.mapData = mapMsg.data;
+                
+                document.getElementById('mapSize').textContent = 
+                    `${this.mapInfo.width} × ${this.mapInfo.height}`;
+                document.getElementById('mapResolution').textContent = 
+                    `${this.mapInfo.resolution.toFixed(3)}m`;
+                document.getElementById('mapOrigin').textContent = 
+                    `(${this.mapInfo.origin.position.x.toFixed(2)}, ${this.mapInfo.origin.position.y.toFixed(2)})`;
+                
+                this.render();
+            }
+            
+            handlePoseMessage(poseMsg) {
+                const pose = poseMsg.pose.pose;
+                this.updateRobotPose(pose);
+            }
+            
+            handleRobotPoseMessage(poseMsg) {
+                const pose = poseMsg.pose;
+                this.updateRobotPose(pose);
+            }
+            
+            updateRobotPose(pose) {
+                const q = pose.orientation;
+                const yaw = Math.atan2(
+                    2 * (q.w * q.z + q.x * q.y),
+                    1 - 2 * (q.y * q.y + q.z * q.z)
+                );
+                
+                this.robotPose = {
+                    x: pose.position.x,
+                    y: pose.position.y,
+                    yaw: yaw
+                };
+                
+                if (this.robotPath.length > 1000) {
+                    this.robotPath.shift();
+                }
+                this.robotPath.push({x: this.robotPose.x, y: this.robotPose.y});
+                
+                document.getElementById('robotX').textContent = this.robotPose.x.toFixed(2);
+                document.getElementById('robotY').textContent = this.robotPose.y.toFixed(2);
+                document.getElementById('robotYaw').textContent = (yaw * 180 / Math.PI).toFixed(1);
+                
+                this.render();
+            }
+            
+            render() {
+                this.ctx.fillStyle = '#f0f0f0';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                if (!this.mapData || !this.mapInfo) {
+                    this.ctx.fillStyle = '#666';
+                    this.ctx.font = '16px Arial';
+                    this.ctx.textAlign = 'center';
+                    const message = this.isConnected ? '等待地圖數據...' : '等待連接到 ROS...';
+                    this.ctx.fillText(message, this.canvas.width/2, this.canvas.height/2);
+                    return;
+                }
+                
+                this.ctx.save();
+                this.ctx.translate(this.canvas.width/2 + this.offsetX, this.canvas.height/2 + this.offsetY);
+                this.ctx.scale(this.scale, this.scale);
+                
+                this.drawMap();
+                
+                if (document.getElementById('showPath').checked) {
+                    this.drawPath();
+                }
+                
+                if (document.getElementById('showRobot').checked) {
+                    this.drawRobot();
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawMap() {
+                const imageData = this.ctx.createImageData(this.mapInfo.width, this.mapInfo.height);
                 const data = imageData.data;
                 
-                const [r, g, b, a] = rgba;
-                
-                for (let i = 0; i < data.length; i += 4) {
-                    if (data[i + 3] !== 0) { // 如果像素不透明
-                        data[i] = r;     // Red
-                        data[i + 1] = g; // Green
-                        data[i + 2] = b; // Blue
-                        data[i + 3] = a; // Alpha
+                for (let i = 0; i < this.mapData.length; i++) {
+                    const value = this.mapData[i];
+                    const pixelIndex = i * 4;
+                    
+                    if (value === -1) {
+                        data[pixelIndex] = 128;     // R
+                        data[pixelIndex + 1] = 128; // G
+                        data[pixelIndex + 2] = 128; // B
+                        data[pixelIndex + 3] = 255; // A
+                    } else {
+                        const color = 255 - (value * 255 / 100);
+                        data[pixelIndex] = color;     // R
+                        data[pixelIndex + 1] = color; // G
+                        data[pixelIndex + 2] = color; // B
+                        data[pixelIndex + 3] = 255;   // A
                     }
                 }
                 
-                ctx.putImageData(imageData, 0, 0);
-            } catch (error) {
-                console.warn('代價地圖顏色應用失敗:', error);
-            }
-        }
-        
-        function initRobotPose() {
-            try {
-                // 建立機器人箭頭
-                robot = new ROS2D.ArrowShape({
-                    size: 0.5,
-                    strokeSize: 0.05,
-                    pulse: true,
-                    fillColor: createjs.Graphics.getRGB(0, 255, 0, 0.9)
-                });
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = this.mapInfo.width;
+                tempCanvas.height = this.mapInfo.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(imageData, 0, 0);
                 
-                if (gridClient && gridClient.rootObject) {
-                    gridClient.rootObject.addChild(robot);
+                const pixelSize = 20;
+                this.ctx.scale(1, -1);
+                this.ctx.drawImage(
+                    tempCanvas, 
+                    -this.mapInfo.width * pixelSize / 2, 
+                    -this.mapInfo.height * pixelSize / 2,
+                    this.mapInfo.width * pixelSize,
+                    this.mapInfo.height * pixelSize
+                );
+                this.ctx.scale(1, -1);
+            }
+            
+            drawPath() {
+                if (this.robotPath.length < 2) return;
+                
+                this.ctx.strokeStyle = '#00ff00';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                
+                const scale = 20;
+                this.ctx.moveTo(this.robotPath[0].x * scale, -this.robotPath[0].y * scale);
+                
+                for (let i = 1; i < this.robotPath.length; i++) {
+                    this.ctx.lineTo(this.robotPath[i].x * scale, -this.robotPath[i].y * scale);
                 }
                 
-                // 訂閱機器人位置
-                const poseListener = new ROSLIB.Topic({
-                    ros: ros,
-                    name: '/amcl_pose',
-                    messageType: 'geometry_msgs/msg/PoseWithCovarianceStamped'
-                });
+                this.ctx.stroke();
+            }
+            
+            drawRobot() {
+                const scale = 20;
+                const x = this.robotPose.x * scale;
+                const y = -this.robotPose.y * scale;
+                const size = 15;
                 
-                poseListener.subscribe((message) => {
-                    if (robot && message.pose && message.pose.pose) {
-                        const pose = message.pose.pose;
-                        const q = pose.orientation;
-                        
-                        // 計算偏航角
-                        const yaw = Math.atan2(
-                            2 * (q.w * q.z + q.x * q.y),
-                            1 - 2 * (q.y * q.y + q.z * q.z)
-                        );
-                        
-                        robot.x = pose.position.x;
-                        robot.y = -pose.position.y; // Y軸反向
-                        robot.rotation = -yaw * 180 / Math.PI;
-                    }
-                });
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                this.ctx.rotate(-this.robotPose.yaw);
                 
-            } catch (error) {
-                console.warn('機器人位置初始化失敗:', error);
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.beginPath();
+                this.ctx.moveTo(size, 0);
+                this.ctx.lineTo(-size/2, size/2);
+                this.ctx.lineTo(-size/2, -size/2);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+            
+            updateStatus(message, type) {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = message;
+                statusEl.className = `status ${type}`;
+            }
+            
+            updateDebugInfo(message) {
+                const debugEl = document.getElementById('debugInfo');
+                const timestamp = new Date().toLocaleTimeString();
+                debugEl.textContent = `[${timestamp}] ${message}`;
+            }
+            
+            resetView() {
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.render();
+            }
+            
+            saveMap() {
+                const link = document.createElement('a');
+                link.download = 'ros2_map.png';
+                link.href = this.canvas.toDataURL();
+                link.click();
+            }
+            
+            reconnect() {
+                if (this.ros) {
+                    this.ros.close();
+                }
+                setTimeout(() => this.connectToROS(), 1000);
             }
         }
         
-        // 控制函數
+        let mapViewer;
+        
         function resetView() {
-            if (viewer && gridClient && gridClient.currentGrid) {
-                viewer.scaleToDimensions(
-                    gridClient.currentGrid.width,
-                    gridClient.currentGrid.height
-                );
-                viewer.shift(
-                    gridClient.currentGrid.position.x,
-                    gridClient.currentGrid.position.y
-                );
-            }
+            if (mapViewer) mapViewer.resetView();
+        }
+        
+        function saveMap() {
+            if (mapViewer) mapViewer.saveMap();
         }
         
         function reconnect() {
-            if (ros) {
-                ros.close();
-            }
-            setTimeout(initROS, 1000);
+            if (mapViewer) mapViewer.reconnect();
         }
         
-        // 切換代價地圖顯示
-        document.getElementById('showGlobalCostmap').addEventListener('change', (e) => {
-            if (globalCostmapClient && globalCostmapClient.currentGrid) {
-                globalCostmapClient.currentGrid.visible = e.target.checked;
+        function updateConnection() {
+            if (mapViewer) {
+                mapViewer.reconnect();
             }
-        });
+        }
         
-        document.getElementById('showLocalCostmap').addEventListener('change', (e) => {
-            if (localCostmapClient && localCostmapClient.currentGrid) {
-                localCostmapClient.currentGrid.visible = e.target.checked;
-            }
-        });
-        
-        // 頁面載入完成後初始化
         window.addEventListener('load', () => {
-            setTimeout(initROS, 500); // 給庫一些時間載入
-        });
-        
-        // 視窗大小改變時調整地圖
-        window.addEventListener('resize', () => {
-            if (viewer) {
-                resetView();
-            }
+            // 檢查依賴庫載入狀態
+            setTimeout(() => {
+                if (checkDependencies()) {
+                    mapViewer = new ROS2MapViewer();
+                } else {
+                    document.getElementById('status').textContent = '❌ 載入失敗';
+                    document.getElementById('status').className = 'status error';
+                }
+            }, 500);
         });
     </script>
 </body>

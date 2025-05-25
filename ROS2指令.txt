@@ -5,6 +5,7 @@ ros2 launch gazebo_ros gazebo.launch.py world:=/Users/lihong/miniconda3/envs/ros
 
 查看ROS2版本：
 printenv ROS_DISTRO
+ros2 topic list
 
 ROS環境：
 source /Users/lihong/miniconda3/envs/ros2/setup.zsh
@@ -13,11 +14,22 @@ source /opt/ros/humble/setup.bash
 Conda：
 conda activate ros2 / conda deactivate
 
-ROS2中的命令：
-ros2 topic list
+Conda安裝：
+conda install ros-humble-rosbridge-server
 
-colcon：
+Colcon：
 colcon build --symlink-install
+
+Colcon跳過測試：
+colcon build --cmake-args -DBUILD_TESTING=OFF
+
+移除colcon檔案：
+rm -rf build install log
+
+Colcon指定路徑：
+colcon build --cmake-args \
+  -DPython3_EXECUTABLE=$(which python3.11) \
+  -DPython3_NumPy_INCLUDE_DIR=$(python3.11 -c "import numpy; print(numpy.get_include())")
 
 rclnodejs：
 rclnodejs："^0.25.0"
@@ -30,17 +42,6 @@ sudo pip install . (->setup.py)
 
 查找檔案：
 ros2 pkg list | grep lihong(->package_name)
-
-移除colcon檔案：
-rm -rf build install log
-
-Colcon指定路徑：
-colcon build --cmake-args \
-  -DPython3_EXECUTABLE=$(which python3.11) \
-  -DPython3_NumPy_INCLUDE_DIR=$(python3.11 -c "import numpy; print(numpy.get_include())")
-
-Colcon跳過測試：
-colcon build --cmake-args -DBUILD_TESTING=OFF
 
 Run python file / Terminal：
 Fn + control + F5 / control + ~
@@ -67,9 +68,6 @@ CMakeLists.txt 中強制指定 CMake 使用 Python 3.11：
 * find_package(Python3 3.11 EXACT REQUIRED)
 * find_package(PythonInterp 3.11 REQUIRED)
 
-Conda安裝：
-* conda install ros-humble-rosbridge-server
-
 Git：
 * git status
 * git config --global user. name “lihong”
@@ -81,6 +79,10 @@ Git：
 * git diff fd0b510 — index.html  （比較差異）
 * git checkout fd0b510 — index.html （還原版本）
 * git push （同步到Github）/ git pull （從Github下載）
+
+Git重設本地到遠端：
+* git fetch origin 
+* git reset --hard origin/main
 
 Docker：
 * 執行micro-ros-agent
@@ -103,7 +105,7 @@ export DISPLAY=host.docker.internal:0
 * 進入 ros2_project
 cd / root/ros2_project
 
-Install:
+Install：
 sudo apt-get update
 sudo apt-get install -y x11-apps
 sudo apt-get install -y libgl1-mesa-glx libgl1-mesa-dri libglu1-mesa
@@ -152,9 +154,11 @@ sudo apt install ros-humble-nav2-msgs
 ros2 launch nav2_bringup navigation_launch.py map:=/map.yaml use_sim_time:=false
 ros2 run my_robot_car patrol_node.py
 
-補充資料：
-* 查詢IP位址
+查詢IP位址：
 ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'
 
 軟啟動：
 ctrl + alt + delete
+
+Nav2_地圖：
+ros2 run nav2_map_server map_server --ros-args -p yaml_filename:=/home/playrobot/Desktop/robot_ws/robot_ws/src/huanyu_robot_start/map/map.yaml
