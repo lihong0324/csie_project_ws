@@ -1,139 +1,215 @@
 #!/usr/bin/env python3
+# patrol_and_ball.py
+import time
+import cv2
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
-from action_msgs.msg import GoalStatus
-import math
+from rclpy.executors import MultiThreadedExecutor
 from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import PoseStamped
-from visualization_msgs.msg import Marker
-from std_msgs.msg import ColorRGBA
+from action_msgs.msg import GoalStatus
+from geometry_msgs.msg import PoseStamped, Twist
+from sensor_msgs.msg import Image
+from std_msgs.msg import Bool
+from cv_bridge import CvBridge
 
-class PatrolBot(Node):
+
+class PatrolAndBall(Node):
     def __init__(self):
-        super().__init__('patrol_bot')
+        super().__init__('patrol_and_ball')
 
-        self.action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
-        self.marker_publisher = self.create_publisher(Marker, '/patrol_markers', 10)
-
-        # 所有的巡邏點座標（x, y）
+        # ---------- 1. 目標點與巡邏順序 ----------
         all_goals = [
-            (1.55, -10.5),   # 1
-            (5.81, -7.25),   # 2
-            (4.24, -5.05),   # 3
-            (0.0706, -8.33), # 4
-            (3.32, -2.74),   # 5
-            (-1.57, -5.91),  # 6
+            (1.55, -10.5),   # 0
+            (5.81, -7.25),   # 1
+            (4.24, -5.05),   # 2
+            (0.0706, -8.33), # 3
+            (3.32, -2.74),   # 4
+            (-1.57, -5.91),  # 5
         ]
-        # 自訂的巡邏順序（index）
         sequence = [0, 1, 2, 3, 2, 4, 5, 4, 1, 0]
         self.goals = [all_goals[i] for i in sequence]
 
-        self.current_goal_index = 0
-        self.visited_index = 0
+        # ---------- 2. ROS2 介面 ----------
+        self.nav_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+        self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.image_sub = self.create_subscription(Image, '/image_raw',
+                                                  self.image_cb, 10)
+        self.manual_sub = self.create_subscription(Bool, '/manual_control',
+                                                   self.manual_cb, 10)
 
-        # 每秒檢查一次是否可以送出下一個目標
-        self.timer = self.create_timer(1.0, self.send_next_goal)
+        # ---------- 3. 狀態變數 ----------
+        self.bridge = CvBridge()
+        self.goal_idx = 0
+        self.navigating = False
+        self.goal_handle = None
 
-        self.waiting_for_server = True
-        self.goal_in_progress = False
+        self.red_ball_detected = False
+        self.ball_cx = None
+        self.img_w = None
 
-        self.get_logger().info("Nav2 巡邏機器人啟動，會在每個點完成後提示並繼續下一個")
+        self.manual_control = False   # False＝自動，True＝手動
 
-    def send_next_goal(self):
-        if self.waiting_for_server:
-            if not self.action_client.wait_for_server(timeout_sec=1.0):
-                self.get_logger().warn("等待 Nav2 Action Server 中...")
-                return
-            self.waiting_for_server = False
+        # ---------- 4. 啟動 ----------
+        self.get_logger().info('等待 Nav2 action server...')
+        self.nav_client.wait_for_server()
+        self.timer = self.create_timer(0.3, self.main_loop)
+        cv2.namedWindow("Ball View", cv2.WINDOW_NORMAL)
+        self.get_logger().info('巡邏 + 紅球偵測 節點啟動完成')
 
-        if self.goal_in_progress or self.current_goal_index >= len(self.goals):
-            return
+    # ==========================================================
+    # 影像回呼：紅球偵測
+    # ==========================================================
+    def image_cb(self, msg: Image):
+        frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        x, y = self.goals[self.current_goal_index]
-        pose = PoseStamped()
-        pose.header.frame_id = 'map'
-        pose.header.stamp = self.get_clock().now().to_msg()
-        pose.pose.position.x = x
-        pose.pose.position.y = y
+        # 紅色雙區間
+        m1 = cv2.inRange(hsv, (0, 100, 100), (10, 255, 255))
+        m2 = cv2.inRange(hsv, (160, 100, 100), (179, 255, 255))
+        mask = cv2.bitwise_or(m1, m2)
 
-        # 設定朝向：朝向下一個點（若存在），否則使用預設方向
-        if self.current_goal_index < len(self.goals) - 1:
-            # 下一個點的座標
-            x2, y2 = self.goals[self.current_goal_index + 1]
-            # 計算從目前點到下一點的 yaw（弧度）
-            yaw = math.atan2(y2 - y, x2 - x)
-            # 將 yaw 轉換為四元數（只需 z, w）
-            pose.pose.orientation.z = math.sin(yaw / 2.0)
-            pose.pose.orientation.w = math.cos(yaw / 2.0)
-            self.get_logger().info(f'第 {self.current_goal_index + 1} 點朝向下一點：yaw={math.degrees(yaw):.2f}°')
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE,
+                                       cv2.CHAIN_APPROX_SIMPLE)
+        self.img_w = frame.shape[1]
+
+        if contours:
+            c = max(contours, key=cv2.contourArea)
+            if cv2.contourArea(c) > 500:
+                M = cv2.moments(c)
+                self.ball_cx = int(M["m10"] / M["m00"])
+                self.red_ball_detected = True
+            else:
+                self.red_ball_detected = False
         else:
-            # 最後一點：保持正前方向
-            pose.pose.orientation.w = 1.0
+            self.red_ball_detected = False
 
-        # 建立導航目標
-        goal_msg = NavigateToPose.Goal()
-        goal_msg.pose = pose
+        # 視窗 + 手動熱鍵
+        cv2.imshow("Ball View", frame)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('m'):
+            self.manual_control = not self.manual_control
+            self.get_logger().info(f'手動模式切換為 {self.manual_control}')
 
-        self.get_logger().info(f'送出巡邏點 {self.current_goal_index + 1}：({x:.2f}, {y:.2f})')
-        self.goal_in_progress = True
-        self._send_goal_future = self.action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_cb)
-        self._send_goal_future.add_done_callback(self.goal_response_cb)
+    # ==========================================================
+    # 手動控制 Bool topic 回呼
+    # ==========================================================
+    def manual_cb(self, msg: Bool):
+        if msg.data != self.manual_control:
+            self.manual_control = msg.data
+            self.get_logger().info(f'手動模式切換為 {self.manual_control}')
 
-    def feedback_cb(self, feedback_msg):
-        # 已移除距離回報（避免過多資訊輸出）
-        pass
+    # ==========================================================
+    # 主循環：決策
+    # ==========================================================
+    def main_loop(self):
+        # ---------- A. 手動模式 ----------
+        if self.manual_control:
+            return  # 自動導航 / 追球全部暫停
 
-    def goal_response_cb(self, future):
-        goal_handle = future.result()
-        if not goal_handle.accepted:
-            self.get_logger().error('目標被拒絕，將不前進')
-            self.goal_in_progress = False
+        # ---------- B. 紅球追蹤 ----------
+        if self.red_ball_detected:
+            # 若正在導航 → 取消
+            if self.navigating and self.goal_handle:
+                self.goal_handle.cancel_goal_async()
+                self.navigating = False
+                self.get_logger().info('偵測到紅球，取消當前導航並追蹤')
+            self.track_ball()
             return
 
-        self.get_logger().info('已接受目標，開始導航...')
-        self._get_result_future = goal_handle.get_result_async()
-        self._get_result_future.add_done_callback(self.result_cb)
+        # ---------- C. 巡邏導航 ----------
+        if not self.navigating and self.goal_idx < len(self.goals):
+            self.send_goal(self.goals[self.goal_idx])
 
-    def result_cb(self, future):
-        result = future.result()
-        status = result.status
+    # ==========================================================
+    # 追蹤紅球
+    # ==========================================================
+    def track_ball(self):
+        if self.ball_cx is None or self.img_w is None:
+            return
+        err = self.ball_cx - self.img_w // 2
+        twist = Twist()
 
+        # 轉向
+        if abs(err) > 50:
+            twist.angular.z = -0.3 if err > 0 else 0.3
+        else:
+            twist.angular.z = 0.0
+            twist.linear.x = 0.12  # 球大致置中 → 前進
+
+        self.cmd_vel_pub.publish(twist)
+
+    # ==========================================================
+    # 送出導航目標
+    # ==========================================================
+    def send_goal(self, pos):
+        goal = NavigateToPose.Goal()
+        goal.pose.header.frame_id = 'map'
+        goal.pose.pose.position.x = pos[0]
+        goal.pose.pose.position.y = pos[1]
+        goal.pose.pose.orientation.w = 1.0
+
+        self.get_logger().info(f'導航至 #{self.goal_idx + 1}: {pos}')
+        self.navigating = True
+        future = self.nav_client.send_goal_async(goal)
+        future.add_done_callback(self.goal_resp_cb)
+
+    def goal_resp_cb(self, future):
+        self.goal_handle = future.result()
+        if not self.goal_handle.accepted:
+            self.get_logger().warn('導航目標被拒絕')
+            self.navigating = False
+            return
+
+        self.goal_handle.get_result_async().add_done_callback(
+            self.goal_result_cb)
+
+    # ==========================================================
+    # 導航結果
+    # ==========================================================
+    def goal_result_cb(self, future):
+        status = future.result().status
         if status == GoalStatus.STATUS_SUCCEEDED:
-            self.get_logger().info('到達目標點！')
-            self.publish_marker(self.goals[self.current_goal_index])
-            self.current_goal_index += 1
+            self.get_logger().info(f'到達第 {self.goal_idx + 1} 點')
+            self.goal_idx += 1
         else:
-            self.get_logger().warn(f'導航失敗（狀態碼：{status}），將再次嘗試同一個點')
+            self.get_logger().warn(f'導航失敗 (status={status})，'
+                                   '前進 0.5 s 後重試')
+            self.bump_forward()
 
-        self.goal_in_progress = False
+        self.navigating = False
 
-    def publish_marker(self, point):
-        x, y = point
-        marker = Marker()
-        marker.header.frame_id = 'map'
-        marker.header.stamp = self.get_clock().now().to_msg()
-        marker.ns = 'patrol_points'
-        marker.id = self.visited_index
-        marker.type = Marker.SPHERE
-        marker.action = Marker.ADD
-        marker.pose.position.x = x
-        marker.pose.position.y = y
-        marker.pose.position.z = 0.1
-        marker.pose.orientation.w = 1.0
-        marker.scale.x = 0.3
-        marker.scale.y = 0.3
-        marker.scale.z = 0.3
-        marker.color = ColorRGBA(r=0.0, g=0.5, b=1.0, a=1.0)
-        self.marker_publisher.publish(marker)
-        self.visited_index += 1
+        # 全部完成 → 結束
+        if self.goal_idx >= len(self.goals):
+            self.get_logger().info('所有巡邏點完成，結束程式')
+            rclpy.shutdown()
 
+    # ==========================================================
+    # bump_forward：失敗後向前小步
+    # ==========================================================
+    def bump_forward(self):
+        twist = Twist()
+        twist.linear.x = 0.05
+        self.cmd_vel_pub.publish(twist)
+        time.sleep(0.5)
+        twist.linear.x = 0.0
+        self.cmd_vel_pub.publish(twist)
+
+
+# ---------------- 主進入點 ----------------
 def main(args=None):
     rclpy.init(args=args)
-    node = PatrolBot()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    node = PatrolAndBall()
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+    try:
+        executor.spin()
+    finally:
+        node.destroy_node()
+        cv2.destroyAllWindows()
+        rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

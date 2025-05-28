@@ -1,8 +1,10 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import serial
 import time
 
 app = Flask(__name__)
+CORS(app)
 
 # 串列埠設定：請依照實際連接埠修改
 SERIAL_PORT = '/dev/ttyACM0'  # Windows 用戶請改成 'COM3' 等
