@@ -1,253 +1,87 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Robot Control Interface</title>
+
+  <!-- ===== 版面＆元件樣式 ===== -->
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 0; /* 移除頁面內邊距 */
-      box-sizing: border-box;
-      transform: scale(0.8);
-      transform-origin: center top;
-    }
+    /* === 版面配置（保留原本樣式） === */
+    body{font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:0;box-sizing:border-box;transform:scale(.8);transform-origin:center top}
+    .page-container{width:125%;display:flex;flex-direction:column;align-items:center;padding-bottom:40px}
+    h1{margin-bottom:20px}
 
-    .page-container {
-      width: 125%; /* Compensate for the 80% scale to maintain proper layout */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-bottom: 40px; /* 增加底部空間 */
-    }
+    /* === 攝影機區 === */
+    .camera-container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin-bottom:20px;width:100%;max-width:1400px}
+    .camera-feed{border:2px solid #000;border-radius:20px;overflow:hidden;position:relative}
+    .camera-label,.view-toggle-hint{position:absolute;background:rgba(0,0,0,.7);color:#fff;padding:5px 10px;border-radius:5px;font-size:14px;z-index:10}
+    .camera-label{top:10px;left:10px}.view-toggle-hint{bottom:10px;right:10px}
+    #main-camera-view{position:relative;width:640px;height:360px}
+    #standard-camera,#thermal-camera{width:100%;height:100%;position:absolute;top:0;left:0}
+    #thermal-camera{display:none}
 
-    h1 {
-      margin-bottom: 20px;
-    }
+    /* === 方向鍵控制區 === */
+    #control-panel{display:grid;grid-template-columns:repeat(3,100px);grid-template-rows:repeat(3,100px);gap:10px;justify-items:center;align-items:center;margin-bottom:20px}
+    .control-btn{width:80px;height:80px;border-radius:50%;font-size:24px;text-align:center;line-height:80px;background:#8cbee9d2;border:1px solid #000;cursor:pointer;transition:background-color .2s;display:flex;justify-content:center;align-items:center}
+    .control-btn.active{background:#4682b4}
+    #up{grid-column:2;grid-row:1}#left{grid-column:1;grid-row:2}#down{grid-column:2;grid-row:3}#right{grid-column:3;grid-row:2}
 
-    .camera-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 20px;
-      width: 100%;
-      max-width: 1400px;
-    }
+    /* === 操作按鈕 === */
+    .button-container{display:flex;gap:15px;margin-top:20px}
+    .action-btn{padding:10px 20px;font-size:18px;background:#f0ad4e;border:none;border-radius:5px;cursor:pointer;transition:background-color .2s,opacity .3s}
+    .action-btn.manual-mode{background:#2ecc71}
+    #reset-btn{background:#5bc0de}#launch-btn{background:#d9534f}
 
-    .camera-feed {
-      border: 2px solid black;
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-    }
+    /* === 狀態面板 === */
+    .status-panel{width:100%;max-width:800px;margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-around;gap:20px}
+    .status-card{background:#f5f5f5;border-radius:10px;padding:15px;min-width:200px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+    .status-card h3{margin-top:0;border-bottom:1px solid #ddd;padding-bottom:5px}
+    .status-indicator{display:flex;align-items:center;margin:10px 0}
+    .indicator-light{width:12px;height:12px;border-radius:50%;margin-right:10px}
+    .green{background:#2ecc71}.red{background:#e74c3c}.yellow{background:#f1c40f}
 
-    .camera-label {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      z-index: 10;
-    }
-
-    .view-toggle-hint {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      z-index: 10;
-    }
-
-    #control-panel {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-template-rows: repeat(3, 100px);
-      grid-gap: 10px;
-      justify-items: center;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .control-btn {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      font-size: 24px; /* 增大字體尺寸 */
-      text-align: center;
-      line-height: 80px;
-      background-color: #8cbee9d2;
-      border: 1px solid black;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      display: flex;
-      justify-content: center;
-      align-items: center; /* 確保箭頭居中 */
-    }
-
-    .control-btn.active {
-      background-color: #4682b4;
-    }
-
-    #up { grid-column: 2; grid-row: 1; }
-    #left { grid-column: 1; grid-row: 2; }
-    #down { grid-column: 2; grid-row: 3; }
-    #right { grid-column: 3; grid-row: 2; }
-
-    .button-container {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .action-btn {
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #f0ad4e;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.2s, opacity 0.3s;
-    }
-
-    .action-btn.manual-mode {
-      background-color: #2ecc71; /* 手動控制時的綠色 */
-    }
-
-    #reset-btn {
-      background-color: #5bc0de;
-    }
-
-    #launch-btn {
-      background-color: #d9534f;
-    }
-
-    .status-panel {
-      width: 100%;
-      max-width: 800px;
-      margin-top: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-      gap: 20px;
-    }
-
-    .status-card {
-      background-color: #f5f5f5;
-      border-radius: 10px;
-      padding: 15px;
-      min-width: 200px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .status-card h3 {
-      margin-top: 0;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 5px;
-    }
-
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      margin: 10px 0;
-    }
-
-    .indicator-light {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-
-    .green { background-color: #2ecc71; }
-    .red { background-color: #e74c3c; }
-    .yellow { background-color: #f1c40f; }
-
-    .motor-value {
-      font-weight: bold;
-    }
-
-    .thermal-data {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .thermal-value {
-      font-weight: bold;
-    }
-
-    #main-camera-view {
-      position: relative;
-      width: 640px;
-      height: 360px;
-    }
-
-    #standard-camera, #thermal-camera {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    #thermal-camera {
-      display: none;
-    }
-
-    #servo-status {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      text-align: center;
-      background-color: #f8f9fa;
-      display: none;
-    }
+    /* === 其他提示 === */
+    #servo-status{margin-top:10px;padding:10px;border-radius:5px;text-align:center;background:#f8f9fa;display:none}
   </style>
 </head>
 <body>
   <div class="page-container">
     <h1>ROS 2 Robot Control</h1>
-    
+
+    <!-- ===== 攝影機畫面 ===== -->
     <div class="camera-container">
       <div class="camera-feed">
-        <div class="camera-label" id="camera-mode-label">標準攝影機</div>
-        <div class="view-toggle-hint">按「1」鍵切換熱成像攝影機</div>
+        <div id="camera-mode-label" class="camera-label">標準攝影機</div>
+        <div class="view-toggle-hint">按 「1」 鍵切換熱成像</div>
         <div id="main-camera-view">
-          <img id="standard-camera" src="" alt="機器人攝影機畫面">
-          <img id="thermal-camera" src="" alt="熱成像攝影機畫面">
+          <img id="standard-camera" src="" alt="機器人視角" />
+          <img id="thermal-camera"  src="" alt="熱成像視角" />
         </div>
       </div>
     </div>
 
+    <!-- ===== 移動控制 ===== -->
     <div id="control-panel">
-      <button id="up" class="control-btn">▲</button>
-      <button id="left" class="control-btn">◀</button>
-      <button id="down" class="control-btn">▼</button>
+      <button id="up"    class="control-btn">▲</button>
+      <button id="left"  class="control-btn">◀</button>
+      <button id="down"  class="control-btn">▼</button>
       <button id="right" class="control-btn">►</button>
     </div>
 
+    <!-- ===== 操作按鈕 ===== -->
     <div class="button-container">
       <button id="toggle-btn" class="action-btn">切換到手動控制</button>
-      <button id="reset-btn" class="action-btn">馬達歸位</button>
+      <button id="reset-btn"  class="action-btn">歸位</button>
       <button id="launch-btn" class="action-btn">發射</button>
     </div>
 
+    <!-- ===== 發射／歸位回饋 ===== -->
     <div id="servo-status"></div>
 
+    <!-- ===== 狀態面板 ===== -->
     <div class="status-panel">
+      <!-- 火焰偵測 -->
       <div class="status-card">
         <h3>火焰偵測</h3>
         <div class="status-indicator">
@@ -255,408 +89,202 @@
           <span id="flame-status">未偵測到火焰</span>
         </div>
       </div>
-      
+
+      <!-- 熱成像 -->
       <div class="status-card">
         <h3>熱成像數據</h3>
-        <div class="thermal-data">
-          <span>最高溫度:</span>
-          <span id="max-temp" class="thermal-value">0°C</span>
+        <div class="status-indicator">
+          <span>最高溫度：</span>
+          <span id="max-temp" class="indicator-light" style="background:none;width:auto;height:auto;margin:0;font-weight:bold">0 °C</span>
         </div>
       </div>
-      
+
+      <!-- 發射器狀態 -->
       <div class="status-card">
-        <h3>馬達狀態</h3>
-        <div class="thermal-data">
-          <span>左輪馬達:</span>
-          <span id="left-motor" class="motor-value">0 RPM</span>
-        </div>
-        <div class="thermal-data">
-          <span>右輪馬達:</span>
-          <span id="right-motor" class="motor-value">0 RPM</span>
-        </div>
-        <div class="thermal-data">
-          <span>位置 X:</span>
-          <span id="position-x" class="motor-value">0.00 m</span>
-        </div>
-        <div class="thermal-data">
-          <span>位置 Y:</span>
-          <span id="position-y" class="motor-value">0.00 m</span>
-        </div>
-        <div class="thermal-data">
-          <span>旋轉角度:</span>
-          <span id="rotation" class="motor-value">0.00°</span>
+        <h3>發射器狀態</h3>
+        <div class="status-indicator">
+          <div id="launcher-indicator" class="indicator-light green"></div>
+          <span id="launcher-status">歸位</span>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ===== roslib.js ===== -->
   <script src="https://unpkg.com/roslib/build/roslib.min.js"></script>
 
   <script>
-    // API 端點設定
+    /* ---------- API 端點 ---------- */
     const API_ENDPOINTS = {
-      SERVO_CONTROL: 'http://192.168.1.144:5001', // 請根據您的伺服馬達伺服器位址更改
-      ROS_BRIDGE: 'ws://172.20.10.2:9090',        // 請根據您的ROS Bridge伺服器位址更改
-      VIDEO_FEED: 'http://192.168.0.103:5000'     // 請根據您的相機伺服器位址更改
+      SERVO_CONTROL: 'http://192.168.1.107:5001',
+      ROS_BRIDGE   : 'ws://172.20.10.2:9090',
+      VIDEO_FEED   : 'http://192.168.0.103:5000'
     };
 
-    // 更新攝影機畫面來源
+    /* ---------- 攝影機來源 ---------- */
     document.getElementById('standard-camera').src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_raw`;
-    document.getElementById('thermal-camera').src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_thermal`;
-    
-    var manualControl = false;
-    var lastActiveButton = null; // 用來追蹤最後被按下的按鈕
-    var activeKey = null; // 用來追蹤當前的鍵盤按下狀態
-    var thermalCameraActive = false; // 追蹤熱成像攝影機狀態
+    document.getElementById('thermal-camera' ).src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_thermal`;
 
-    // 顯示伺服馬達操作狀態
-    function showServoStatus(message, isSuccess = true) {
-      const statusDiv = document.getElementById('servo-status');
-      statusDiv.textContent = message;
-      statusDiv.style.display = 'block';
-      statusDiv.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
-      statusDiv.style.color = isSuccess ? '#155724' : '#721c24';
-      
-      // 5秒後隱藏訊息
-      setTimeout(() => {
-        statusDiv.style.display = 'none';
-      }, 5000);
-    }
+    /* ---------- roslib 連線 ---------- */
+    const ros = new ROSLIB.Ros({ url: API_ENDPOINTS.ROS_BRIDGE });
+    ros.on('connection', () => console.log('✔ 已連接 ROS'));
+    ros.on('error'     , e => console.error('✖ ROS 連線錯誤：', e));
+    ros.on('close'     , () => console.warn('⚠ 與 ROS 連線關閉'));
 
-    // 馬達歸位 API 呼叫
-    function resetServoMotors() {
-      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/reset`, { // 已修改
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('馬達歸位成功:', data);
-        showServoStatus(data.message);
-        
-        // 視覺回饋 - 短暫高亮顯示按鈕
-        document.getElementById('reset-btn').style.opacity = '0.7';
-        setTimeout(function() {
-          document.getElementById('reset-btn').style.opacity = '1';
-        }, 300);
-      })
-      .catch(error => {
-        console.error('馬達歸位失敗:', error);
-        showServoStatus('馬達歸位失敗，請稍後再試', false);
-      });
-    }
-
-    // 馬達發射 API 呼叫
-    function launchServoMotors() {
-      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/launch`, { // 已修改
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('馬達發射成功:', data);
-        showServoStatus(data.message);
-        
-        // 視覺回饋 - 短暫高亮顯示按鈕
-        document.getElementById('launch-btn').style.opacity = '0.7';
-        setTimeout(function() {
-          document.getElementById('launch-btn').style.opacity = '1';
-        }, 300);
-      })
-      .catch(error => {
-        console.error('馬達發射失敗:', error);
-        showServoStatus('馬達發射失敗，請稍後再試', false);
-      });
-    }
-
-    var ros = new ROSLIB.Ros({
-      url: API_ENDPOINTS.ROS_BRIDGE // 已修改
-    });
-
-    ros.on('connection', function() {
-      console.log('已連接到 ROS');
-    });
-
-    ros.on('error', function(error) {
-      console.log('連接到 ROS 時發生錯誤: ', error);
-    });
-
-    ros.on('close', function() {
-      console.log('與 ROS 的連接已關閉');
-    });
-
-    // 發布機器人移動命令的 Topic
-    var cmdVel = new ROSLIB.Topic({
-      ros: ros,
+    /* ---------- /cmd_vel topic ---------- */
+    const cmdVel = new ROSLIB.Topic({
+      ros : ros,
       name: '/cmd_vel',
       messageType: 'geometry_msgs/Twist'
     });
+    const twist = new ROSLIB.Message({ linear:{x:0,y:0,z:0}, angular:{x:0,y:0,z:0} });
 
-    // 訂閱火焰偵測結果的 Topic
-    var flameDetection = new ROSLIB.Topic({
-      ros: ros,
-      name: '/flame_detection',
-      messageType: 'std_msgs/Bool'
-    });
+    /* ---------- 其他 ROS topic ---------- */
+    const flameDetection = new ROSLIB.Topic({ ros, name:'/flame_detection', messageType:'std_msgs/Bool' });
+    const thermalData    = new ROSLIB.Topic({ ros, name:'/thermal_data',    messageType:'std_msgs/String' });
 
-    // 訂閱熱成像數據的 Topic - 使用JSON
-    var thermalData = new ROSLIB.Topic({
-      ros: ros,
-      name: '/thermal_data',
-      messageType: 'std_msgs/String' // 使用字串類型傳遞JSON數據
-    });
+    /* ---------- UI 狀態 ---------- */
+    let manualControl = false;
+    let lastActiveBtn = null;
+    let activeKey     = null;
+    let thermalOn     = false;
 
-    // 訂閱馬達狀態的 Topic
-    var motorStatus = new ROSLIB.Topic({
-      ros: ros,
-      name: '/motor_status',
-      messageType: 'sensor_msgs/JointState' // 假設使用關節狀態訊息，實際應根據系統設計調整
-    });
-
-    // 訂閱機器人位置的 Topic
-    var robotPosition = new ROSLIB.Topic({
-      ros: ros,
-      name: '/odom',
-      messageType: 'nav_msgs/Odometry'
-    });
-
-    var twist = new ROSLIB.Message({
-      linear: { x: 0.0, y: 0.0, z: 0.0 },
-      angular: { x: 0.0, y: 0.0, z: 0.0 }
-    });
-
-    // 防止方向鍵滾動頁面
-    window.addEventListener("keydown", function(e) {
-      // 如果是方向鍵或數字鍵1，阻止預設行為
-      if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "1"].indexOf(e.key) > -1) {
-        e.preventDefault();
-      }
-    }, false);
-
-    // 切換攝影機顯示模式
-    function toggleCameraMode() {
-      thermalCameraActive = !thermalCameraActive;
-      var standardCamera = document.getElementById('standard-camera');
-      var thermalCamera = document.getElementById('thermal-camera');
-      var cameraLabel = document.getElementById('camera-mode-label');
-      
-      if (thermalCameraActive) {
-        standardCamera.style.display = 'none';
-        thermalCamera.style.display = 'block';
-        cameraLabel.textContent = '熱成像攝影機';
-      } else {
-        standardCamera.style.display = 'block';
-        thermalCamera.style.display = 'none';
-        cameraLabel.textContent = '標準攝影機';
-      }
+    /* ---------- 工具函式 ---------- */
+    function showServoStatus(msg, ok=true){
+      const div = document.getElementById('servo-status');
+      div.textContent = msg;
+      div.style.display = 'block';
+      div.style.backgroundColor = ok ? '#d4edda' : '#f8d7da';
+      div.style.color = ok ? '#155724' : '#721c24';
+      setTimeout(()=>div.style.display='none', 5000);
+    }
+    function setLauncherStatus(state){
+      const ind  = document.getElementById('launcher-indicator');
+      const text = document.getElementById('launcher-status');
+      text.textContent = state;
+      ind.className    = 'indicator-light ' + (state==='歸位' ? 'green' : state==='發射' ? 'red' : 'yellow');
+    }
+    function resetBtnStyles(){
+      ['up','down','left','right'].forEach(id => document.getElementById(id).classList.remove('active'));
+      lastActiveBtn = null;
+    }
+    function toggleCamera(){
+      thermalOn = !thermalOn;
+      document.getElementById('thermal-camera').style.display  = thermalOn ? 'block':'none';
+      document.getElementById('standard-camera').style.display = thermalOn ? 'none' :'block';
+      document.getElementById('camera-mode-label').textContent = thermalOn ? '熱成像攝影機' : '標準攝影機';
     }
 
-    function resetButtonStyles() {
-      if (lastActiveButton) {
-        lastActiveButton.classList.remove('active');
-        lastActiveButton = null;
-      }
-      
-      // 重設所有按鈕
-      document.getElementById('up').classList.remove('active');
-      document.getElementById('down').classList.remove('active');
-      document.getElementById('left').classList.remove('active');
-      document.getElementById('right').classList.remove('active');
+    /* ---------- 發射器 API ---------- */
+    function resetLauncher(){
+      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/reset`,{method:'POST',headers:{'Content-Type':'application/json'}})
+        .then(r=>r.json()).then(d=>{
+          showServoStatus(d.message);
+          setLauncherStatus('歸位');
+          flashBtn('reset-btn');
+        }).catch(e=>{
+          console.error(e);showServoStatus('歸位失敗',false);
+        });
+    }
+    function launchLauncher(){
+      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/launch`,{method:'POST',headers:{'Content-Type':'application/json'}})
+        .then(r=>r.json()).then(d=>{
+          showServoStatus(d.message);
+          setLauncherStatus('發射');
+          flashBtn('launch-btn');
+        }).catch(e=>{
+          console.error(e);showServoStatus('發射失敗',false);
+        });
+    }
+    function flashBtn(id){
+      const btn=document.getElementById(id);
+      btn.style.opacity='.7';setTimeout(()=>btn.style.opacity='1',300);
     }
 
-    function toggleMovement(direction, button) {
-      // 如果按鈕已經是活動狀態，則停止動作並重設顏色
-      if (lastActiveButton === button) {
-        stopMovement();
-        return;
+    /* ---------- 移動控制 ---------- */
+    function move(dir, btn){
+      if(lastActiveBtn===btn){ stop(); return; }
+      resetBtnStyles();
+      switch(dir){
+        case 'up'   : twist.linear.x =  0.5; twist.angular.z = 0;   break;
+        case 'down' : twist.linear.x = -0.5; twist.angular.z = 0;   break;
+        case 'left' : twist.linear.x = 0;    twist.angular.z = 0.5; break;
+        case 'right': twist.linear.x = 0;    twist.angular.z =-0.5; break;
       }
-
-      resetButtonStyles();
-
-      // 根據方向設定速度
-      switch (direction) {
-        case 'up':
-          twist.linear.x = 0.5;
-          twist.angular.z = 0.0;
-          break;
-        case 'down':
-          twist.linear.x = -0.5;
-          twist.angular.z = 0.0;
-          break;
-        case 'left':
-          twist.linear.x = 0.0;
-          twist.angular.z = 0.5;
-          break;
-        case 'right':
-          twist.linear.x = 0.0;
-          twist.angular.z = -0.5;
-          break;
-      }
-
       cmdVel.publish(twist);
-
-      // 設定按鈕顏色
-      button.classList.add('active');
-      lastActiveButton = button;
+      btn.classList.add('active'); lastActiveBtn = btn;
     }
-
-    function stopMovement() {
-      twist.linear.x = 0.0;
-      twist.angular.z = 0.0;
+    function stop(){
+      twist.linear.x = twist.angular.z = 0;
       cmdVel.publish(twist);
-
-      resetButtonStyles();
+      resetBtnStyles();
     }
 
-    // 設定按鈕點擊事件
-    document.getElementById('up').addEventListener('click', function() { toggleMovement('up', this); });
-    document.getElementById('down').addEventListener('click', function() { toggleMovement('down', this); });
-    document.getElementById('left').addEventListener('click', function() { toggleMovement('left', this); });
-    document.getElementById('right').addEventListener('click', function() { toggleMovement('right', this); });
-    document.getElementById('reset-btn').addEventListener('click', resetServoMotors);
-    document.getElementById('launch-btn').addEventListener('click', launchServoMotors);
+    /* ---------- 事件繫結 ---------- */
+    ['up','down','left','right'].forEach(id=>{
+      document.getElementById(id).addEventListener('click',()=>move(id,document.getElementById(id)));
+    });
+    document.getElementById('reset-btn' ).addEventListener('click', resetLauncher);
+    document.getElementById('launch-btn').addEventListener('click', launchLauncher);
 
-    // 鍵盤事件處理
-    document.addEventListener('keydown', function(event) {
-      // 檢查是否按下數字鍵1來切換攝影機模式
-      if (event.key === '1') {
-        toggleCameraMode();
-        return;
-      }
-      
-      if (activeKey) return; // 防止重複觸發
-      
-      switch (event.key) {
-        case 'ArrowUp':
-          activeKey = 'ArrowUp';
-          toggleMovement('up', document.getElementById('up'));
-          break;
-        case 'ArrowDown':
-          activeKey = 'ArrowDown';
-          toggleMovement('down', document.getElementById('down'));
-          break;
-        case 'ArrowLeft':
-          activeKey = 'ArrowLeft';
-          toggleMovement('left', document.getElementById('left'));
-          break;
-        case 'ArrowRight':
-          activeKey = 'ArrowRight';
-          toggleMovement('right', document.getElementById('right'));
-          break;
-        case 'r':  // 按 R 鍵執行馬達歸位
-          resetServoMotors();
-          break;
-        case 'l':  // 按 L 鍵執行馬達發射
-          launchServoMotors();
-          break;
+    /* --- 鍵盤 --- */
+    window.addEventListener('keydown',e=>{
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','1'].includes(e.key))e.preventDefault();
+    });
+    document.addEventListener('keydown',e=>{
+      if(activeKey) return;
+      switch(e.key){
+        case '1'        : toggleCamera(); break;
+        case 'ArrowUp'  : activeKey='ArrowUp';   move('up',   up);    break;
+        case 'ArrowDown': activeKey='ArrowDown'; move('down', down);  break;
+        case 'ArrowLeft': activeKey='ArrowLeft'; move('left', left);  break;
+        case 'ArrowRight':activeKey='ArrowRight';move('right',right); break;
+        case 'r': resetLauncher(); break;
+        case 'l': launchLauncher(); break;
       }
     });
-
-    document.addEventListener('keyup', function(event) {
-      if (event.key === activeKey) {
-        stopMovement();
-        activeKey = null;
-      }
+    document.addEventListener('keyup',e=>{
+      if(e.key===activeKey){ stop(); activeKey=null; }
     });
 
-    // 手動/自動控制的切換邏輯
-    document.getElementById('toggle-btn').addEventListener('click', function() {
+    /* ---------- 手動／自動切換 ---------- */
+    document.getElementById('toggle-btn').addEventListener('click',()=>{
       manualControl = !manualControl;
+      new ROSLIB.Topic({ros,name:'/manual_control',messageType:'std_msgs/Bool'})
+        .publish(new ROSLIB.Message({data:manualControl}));
+      const tBtn=document.getElementById('toggle-btn');
+      tBtn.textContent = manualControl ? '切換到自動導航' : '切換到手動控制';
+      tBtn.classList.toggle('manual-mode', manualControl);
+    });
 
-      var manualControlTopic = new ROSLIB.Topic({
-        ros: ros,
-        name: '/manual_control',
-        messageType: 'std_msgs/Bool'
-      });
-
-      var manualControlMsg = new ROSLIB.Message({
-        data: manualControl
-      });
-
-      manualControlTopic.publish(manualControlMsg);
-
-      // 更新按鈕文字
-      document.getElementById('toggle-btn').innerText = manualControl ? '切換到自動導航' : '切換到手動控制';
-      
-      // 更新按鈕顏色
-      if (manualControl) {
-        document.getElementById('toggle-btn').classList.add('manual-mode');
-      } else {
-        document.getElementById('toggle-btn').classList.remove('manual-mode');
+    /* ---------- ROS 資料訂閱 ---------- */
+    flameDetection.subscribe(msg=>{
+      const ind = document.getElementById('flame-indicator');
+      const txt = document.getElementById('flame-status');
+      if(msg.data){
+        ind.className='indicator-light red';
+        txt.textContent='偵測到火焰!';
+        txt.style.color='#e74c3c'; txt.style.fontWeight='bold';
+      }else{
+        ind.className='indicator-light green';
+        txt.textContent='未偵測到火焰';
+        txt.style.color=''; txt.style.fontWeight='';
       }
     });
-
-    // 處理火焰偵測數據
-    flameDetection.subscribe(function(message) {
-      var flameIndicator = document.getElementById('flame-indicator');
-      var flameStatus = document.getElementById('flame-status');
-      
-      if (message.data) {
-        flameIndicator.className = 'indicator-light red';
-        flameStatus.textContent = '偵測到火焰!';
-        flameStatus.style.color = '#e74c3c';
-        flameStatus.style.fontWeight = 'bold';
-      } else {
-        flameIndicator.className = 'indicator-light green';
-        flameStatus.textContent = '未偵測到火焰';
-        flameStatus.style.color = '';
-        flameStatus.style.fontWeight = '';
-      }
+    thermalData.subscribe(msg=>{
+      try{
+        const data=JSON.parse(msg.data);
+        if(data.max_temp!==undefined)
+          document.getElementById('max-temp').textContent = data.max_temp.toFixed(1)+' °C';
+      }catch(err){ console.error('熱成像資料解析錯誤：',err); }
     });
 
-    // 處理熱成像數據 - 使用JSON格式
-    thermalData.subscribe(function(message) {
-      try {
-        // 解析JSON字串
-        var thermalInfo = JSON.parse(message.data);
-        
-        // 更新最高溫度數據
-        if (thermalInfo.max_temp !== undefined) {
-          document.getElementById('max-temp').textContent = thermalInfo.max_temp.toFixed(1) + '°C';
-        }
-      } catch (e) {
-        console.error('解析熱成像數據時出錯:', e);
-      }
-    });
-
-    // 處理馬達狀態
-    motorStatus.subscribe(function(message) {
-      // 假設訊息中包含左右輪馬達的RPM
-      if (message.name.length >= 2 && message.velocity.length >= 2) {
-        document.getElementById('left-motor').textContent = Math.round(message.velocity[0]) + ' RPM';
-        document.getElementById('right-motor').textContent = Math.round(message.velocity[1]) + ' RPM';
-      }
-    });
-
-    // 處理機器人位置
-    robotPosition.subscribe(function(message) {
-      // 更新位置和旋轉角度
-      var position = message.pose.pose.position;
-      var orientation = message.pose.pose.orientation;
-      
-      // 從四元數計算旋轉角度(yaw)
-      var yaw = Math.atan2(2.0 * (orientation.w * orientation.z + orientation.x * orientation.y),
-                           1.0 - 2.0 * (orientation.y * orientation.y + orientation.z * orientation.z));
-      var degrees = yaw * (180/Math.PI);
-      
-      document.getElementById('position-x').textContent = position.x.toFixed(2) + ' m';
-      document.getElementById('position-y').textContent = position.y.toFixed(2) + ' m';
-      document.getElementById('rotation').textContent = degrees.toFixed(2) + '°';
-    });
-
-    // 初始化時試圖連接到所有topic
-    window.addEventListener('load', function() {
-      console.log('頁面已載入，正在連接到ROS話題...');
-      
-      // 初始化按鈕狀態 - 確保自動/手動控制按鈕顯示正確
-      document.getElementById('toggle-btn').innerText = '切換到手動控制';
-      document.getElementById('toggle-btn').classList.remove('manual-mode');
+    /* ---------- 初始化 ---------- */
+    window.addEventListener('load',()=>{
+      document.getElementById('toggle-btn').textContent='切換到手動控制';
+      setLauncherStatus('歸位');          // 預設顯示歸位
+      console.log('📋 介面已載入');
     });
   </script>
-
 </body>
 </html>

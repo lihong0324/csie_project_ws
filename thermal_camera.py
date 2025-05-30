@@ -6,7 +6,7 @@ import cv2
 app = Flask(__name__)
 
 # ----- 串列埠 & 攝影機設定 -----
-SERIAL_PORT   = 'COM6'
+SERIAL_PORT   = '/dev/ttyUSB0' # macOS/Linux: '/dev/ttyUSB0' 或 '/dev/ttyACM0'
 BAUD_RATE     = 115200
 TEMP_THRESHOLD = 40.0
 FIRE_HUE_RANGE = [(0, 50)]
