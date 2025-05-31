@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# flame_tracker.py  – 2025-05-29  (rev. ball-logic)
+# flame_tracker.py – 2025-05-30 (stop-at-S2, all text in English)
 
 import rclpy, cv2, serial, time, glob, numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 
-# ---------- 畫面參數 ----------
+# ---------- GUI parameters ----------
 WIDTH, HEIGHT = 1000, 750
 GRID_STEP      = 50
-COLOR_MAP = [  # 0-15 強度 ⇒ 顏色
+COLOR_MAP = [  # 0-15 strength → color (BGR)
     (50,50,255),(100,100,255),(130,150,255),(0,200,255),
     (0,255,255),(0,255,150),(0,255,100),(0,255,50),
     (0,255,0),(100,255,0),(180,255,0),(255,255,0),
@@ -20,51 +20,52 @@ class FlameTracker(Node):
     def __init__(self):
         super().__init__('flame_tracker_visual')
 
-        # ---- 可由 launch 覆寫的 ROS 參數 ----
+        # -------- ROS parameters --------
         self.shoot_thr    = self.declare_parameter('shoot_threshold', 2).get_parameter_value().integer_value
         self.forward_spd  = self.declare_parameter('forward_speed', 0.18).get_parameter_value().double_value
         self.backward_spd = self.declare_parameter('backward_speed', 0.10).get_parameter_value().double_value
         self.angular_spd  = self.declare_parameter('angular_speed', 0.35).get_parameter_value().double_value
 
-        # ---- 自動搜尋 /dev/ttyACM0 ----
+        # -------- auto-detect /dev/ttyACM0 --------
         self.ser = self._auto_serial(baud=115200)
         if not self.ser:
-            self.get_logger().fatal("❌ 找不到 Arduino 串列埠")
+            self.get_logger().fatal("Arduino serial port not found")
             raise SystemExit
 
-        # ---- ROS Pub / Sub ----
+        # -------- ROS pub/sub --------
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.create_subscription(Bool, '/manual_control', self._toggle_manual, 10)
         self.manual_mode   = False
         self.fire_detected = False
 
-        # ---- OpenCV 視窗 ----
-        cv2.namedWindow("🔥 Flame Tracker", cv2.WINDOW_NORMAL)
+        # -------- OpenCV window --------
+        cv2.namedWindow("Flame Tracker", cv2.WINDOW_NORMAL)
 
-        # 20 Hz timer
+        # 20 Hz loop
         self.create_timer(0.05, self._loop)
-        self.get_logger().info("🔥 Flame tracker 已啟動（改用 ball_detector 移動邏輯）")
+        self.get_logger().info("Flame tracker started (Stop at S=2)")
 
-    # ---------- 自動偵測 Serial Port ----------
+    # ---------- auto-detect serial ----------
     def _auto_serial(self, baud:int):
         for p in glob.glob('/dev/ttyACM0'):
             try:
                 s = serial.Serial(p, baud, timeout=1)
                 time.sleep(2)
                 if s.readline().decode('utf-8', 'ignore').count(',') >= 9:
-                    self.get_logger().info(f"✅ 連接 {p}")
+                    self.get_logger().info(f"Connected to {p}")
                     return s
                 s.close()
-            except: pass
+            except: 
+                pass
         return None
 
-    # ---------- Manual / Auto 切換 ----------
+    # ---------- manual / auto toggle ----------
     def _toggle_manual(self, msg:Bool):
         self.manual_mode = msg.data
-        self.cmd_pub.publish(Twist())         # 立即急停
-        self.get_logger().info("🛑 手動模式" if msg.data else "✅ 自動模式")
+        self.cmd_pub.publish(Twist())       # instant stop
+        self.get_logger().info("Manual mode" if msg.data else "Auto mode")
 
-    # ---------- 主迴圈 ----------
+    # ---------- main loop ----------
     def _loop(self):
         raw = self.ser.readline()
         if not raw:
@@ -76,16 +77,16 @@ class FlameTracker(Node):
         if len(parts) % 3:
             return
 
-        # 解析火焰座標 & 強度
+        # ---- parse coordinates & strength ----
         coords, max_s = [], -1
         for i in range(0, len(parts), 3):
             ix, iy, s = parts[i:i+3]
-            if ix == 1023 or iy == 1023:      # 該像素無效
+            if ix == 1023 or iy == 1023:   # invalid pixel
                 continue
             coords.append((ix, iy, s))
             max_s = max(max_s, s)
 
-        # ---------- 視覺化 ----------
+        # ---------- visualization ----------
         frame = np.zeros((HEIGHT, WIDTH, 3), np.uint8)
         for x in range(0, WIDTH, GRID_STEP):
             cv2.line(frame, (x, 0), (x, HEIGHT), (0, 255, 0), 1)
@@ -104,55 +105,56 @@ class FlameTracker(Node):
             cv2.putText(frame, f"{cx},{cy}", (cx + 10, cy - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.55, COLOR_MAP[min(s, 15)], 2)
 
-        # ---------- 半透明資訊底 ------
+        # translucent header background
         overlay = frame.copy()
-        cv2.rectangle(overlay, (0, 0), (420, 170), (0, 0, 0), -1)
+        cv2.rectangle(overlay, (0, 0), (440, 170), (0, 0, 0), -1)
         cv2.addWeighted(overlay, 0.4, frame, 0.6, 0, frame)
 
-        # ---------- 控制邏輯 ----------
-        twist       = Twist()
-        mode_str    = "Manual Mode" if self.manual_mode else "Auto Mode"
-        status_str  = "Manual"
+        # ---------- control logic ----------
+        twist      = Twist()
+        mode_str   = "Manual" if self.manual_mode else "Auto"
+        status_str = "Manual"
 
-        # 1) 手動模式 → 立即返回
         if self.manual_mode:
             self.fire_detected = False
 
-        # 2) 無火焰（所有 s=15 或無有效座標）→ 原地旋轉
+        # no fire → rotate
         elif (max_s == 15) or (not coords):
             self.fire_detected = False
-            twist.angular.z =  self.angular_spd
-            status_str      = "Searching (Rotating)"
+            twist.angular.z = self.angular_spd
+            status_str      = "Searching (rotate)"
 
-        # 3) 有火焰 → ball_detector 風格中心對齊 + 距離判斷
         else:
             self.fire_detected = True
-
-            # 3-a 取「最靠近」（s 最小）的點作為目標
+            # choose pixel with minimum s (closest)
             target   = min(coords, key=lambda c: c[2])
-            cx_pixel = WIDTH - int(target[1] * WIDTH / 1024)   # 已經 flip 過
+            cx_pixel = WIDTH - int(target[1] * WIDTH / 1024)    # after flip
             img_mid  = WIDTH / 2
             tol      = WIDTH * 0.10
             left, right = img_mid - tol, img_mid + tol
 
-            # -- 角速度（左右旋轉）--
+            # angular velocity: align center
             if left < cx_pixel < right:
                 twist.angular.z = 0.0
             elif cx_pixel < left:
-                twist.angular.z =  self.angular_spd     # 左側 → 左轉
+                twist.angular.z =  self.angular_spd
             else:
-                twist.angular.z = -self.angular_spd      # 右側 → 右轉
+                twist.angular.z = -self.angular_spd
 
-            # -- 線速度（前進 / 後退）--
-            if max_s < self.shoot_thr:                   # 太遠 → 前進
+            # linear velocity: forward / backward / hold
+            if max_s < self.shoot_thr:           # too far → forward
                 twist.linear.x =  self.forward_spd
-                status_str = f"S={max_s} < {self.shoot_thr} → Forward"
-            else:                                        # 達門檻 → 後退 + 準備發射
+                status_str     = f"S={max_s} < 2 → Forward"
+            elif max_s > self.shoot_thr:         # too close → back
                 twist.linear.x = -self.backward_spd
-                status_str = f"S≥{self.shoot_thr} → Backward & Shoot"
+                status_str     = f"S={max_s} > 2 → Backward"
+            else:                                # S == 2 → stop
+                twist.linear.x  = 0.0
+                twist.angular.z = 0.0
+                status_str      = "S = 2 → Hold"
 
-        # ---------- 畫面文字 ----------
-        cv2.putText(frame, f"🔥 Flame Tracker ({mode_str})", (10, 30),
+        # ---------- on-screen text ----------
+        cv2.putText(frame, f"Flame Tracker ({mode_str})", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 255), 2)
         cv2.putText(frame, f"Max Strength: {max_s}", (10, 65),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2)
@@ -161,14 +163,14 @@ class FlameTracker(Node):
         cv2.putText(frame, f"Status: {status_str}", (10, 125),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 100), 2)
 
-        if self.fire_detected and max_s >= self.shoot_thr:
-            cv2.putText(frame, "🔥 S ≥ 2，準備發射", (10, 155),
+        if self.fire_detected and max_s == self.shoot_thr:
+            cv2.putText(frame, "S = 2, hold & ready to fire", (10, 155),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
 
-        cv2.imshow("🔥 Flame Tracker", frame)
+        cv2.imshow("Flame Tracker", frame)
         cv2.waitKey(1)
 
-        # ---------- 發送速度指令 ----------
+        # ---------- publish cmd_vel ----------
         if not self.manual_mode:
             self.cmd_pub.publish(twist)
 
