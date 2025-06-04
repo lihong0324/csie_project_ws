@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Robot Control Interface</title>
 
-  <!-- ===== 版面＆元件樣式 ===== -->
   <style>
     /* === 版面配置 === */
     body{font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:0;box-sizing:border-box;transform:scale(.8);transform-origin:center top}
@@ -15,9 +14,10 @@
     /* === 攝影機區 === */
     .camera-container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin-bottom:20px;width:100%;max-width:1400px}
     .camera-feed{border:2px solid #000;border-radius:20px;overflow:hidden;position:relative}
-    .camera-label,.view-toggle-hint{position:absolute;background:rgba(0,0,0,.7);color:#fff;padding:5px 10px;border-radius:5px;font-size:14px;z-index:10}
-    .camera-label{top:10px;right:10px;left:auto}          /* ← 右上角 */
+    .camera-label,.view-toggle-hint,.temp-overlay{position:absolute;background:rgba(0,0,0,.7);color:#fff;padding:5px 10px;border-radius:5px;font-size:14px;z-index:10}
+    .camera-label{top:10px;right:10px;left:auto}
     .view-toggle-hint{bottom:10px;right:10px}
+    .temp-overlay{top:10px;left:10px}          /* ★ 新增：左上角溫度 */
     #main-camera-view{position:relative;width:640px;height:360px}
     #standard-camera,#thermal-camera{width:100%;height:100%;position:absolute;top:0;left:0}
     #thermal-camera{display:none}
@@ -42,7 +42,6 @@
     .indicator-light{width:12px;height:12px;border-radius:50%;margin-right:10px}
     .green{background:#2ecc71}.red{background:#e74c3c}.yellow{background:#f1c40f}
 
-    /* === 其他提示 === */
     #servo-status{margin-top:10px;padding:10px;border-radius:5px;text-align:center;background:#f8f9fa;display:none}
   </style>
 </head>
@@ -53,6 +52,7 @@
     <!-- ===== 攝影機畫面 ===== -->
     <div class="camera-container">
       <div class="camera-feed">
+        <div id="max-temp-overlay" class="temp-overlay">最高溫度：0 °C</div> <!-- ★ 新增 -->
         <div id="camera-mode-label" class="camera-label">標準攝影機</div>
         <div class="view-toggle-hint">按 「1」 鍵切換熱成像</div>
         <div id="main-camera-view">
@@ -82,7 +82,6 @@
 
     <!-- ===== 狀態面板 ===== -->
     <div class="status-panel">
-      <!-- 火焰偵測 -->
       <div class="status-card">
         <h3>火焰偵測</h3>
         <div class="status-indicator">
@@ -91,7 +90,6 @@
         </div>
       </div>
 
-      <!-- 熱成像 -->
       <div class="status-card">
         <h3>熱成像數據</h3>
         <div class="status-indicator">
@@ -100,7 +98,6 @@
         </div>
       </div>
 
-      <!-- 發射器狀態 -->
       <div class="status-card">
         <h3>發射器狀態</h3>
         <div class="status-indicator">
@@ -111,20 +108,18 @@
     </div>
   </div>
 
-  <!-- ===== roslib.js ===== -->
   <script src="https://unpkg.com/roslib/build/roslib.min.js"></script>
-
   <script>
     /* ---------- API 端點 ---------- */
     const API_ENDPOINTS = {
-      SERVO_CONTROL: 'http://192.168.1.107:5001',
-      ROS_BRIDGE   : 'ws://172.20.10.2:9090',
-      VIDEO_FEED   : 'http://192.168.0.103:5000'
+      SERVO_CONTROL: 'http://192.168.1.187:5001',
+      ROS_BRIDGE   : 'ws://192.168.1.187:9090',
+      VIDEO_FEED   : 'http://192.168.1.187:5000'
     };
 
     /* ---------- 攝影機來源 ---------- */
-    document.getElementById('standard-camera').src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_raw`;
-    document.getElementById('thermal-camera' ).src = `${API_ENDPOINTS.VIDEO_FEED}/video_feed_thermal`;
+    document.getElementById('standard-camera').src = `${API_ENDPOINTS.VIDEO_FEED}/raw`;
+    document.getElementById('thermal-camera' ).src = `${API_ENDPOINTS.VIDEO_FEED}/thermal`;
 
     /* ---------- roslib 連線 ---------- */
     const ros = new ROSLIB.Ros({ url: API_ENDPOINTS.ROS_BRIDGE });
@@ -134,150 +129,111 @@
 
     /* ---------- /cmd_vel topic ---------- */
     const cmdVel = new ROSLIB.Topic({
-      ros : ros,
-      name: '/cmd_vel',
-      messageType: 'geometry_msgs/Twist'
+      ros , name:'/cmd_vel', messageType:'geometry_msgs/Twist'
     });
-    const twist = new ROSLIB.Message({ linear:{x:0,y:0,z:0}, angular:{x:0,y:0,z:0} });
+    const twist = new ROSLIB.Message({linear:{x:0,y:0,z:0},angular:{x:0,y:0,z:0}});
 
     /* ---------- 其他 ROS topic ---------- */
     const flameDetection = new ROSLIB.Topic({ ros, name:'/flame_detection', messageType:'std_msgs/Bool' });
     const thermalData    = new ROSLIB.Topic({ ros, name:'/thermal_data',    messageType:'std_msgs/String' });
 
     /* ---------- UI 狀態 ---------- */
-    let manualControl = false;
-    let lastActiveBtn = null;
-    let activeKey     = null;
-    let thermalOn     = false;
+    let manualControl=false,lastActiveBtn=null,activeKey=null,thermalOn=false;
 
     /* ---------- 工具函式 ---------- */
     function showServoStatus(msg, ok=true){
-      const div = document.getElementById('servo-status');
-      div.textContent = msg;
-      div.style.display = 'block';
-      div.style.backgroundColor = ok ? '#d4edda' : '#f8d7da';
-      div.style.color = ok ? '#155724' : '#721c24';
-      setTimeout(()=>div.style.display='none', 5000);
+      const div=document.getElementById('servo-status');
+      div.textContent=msg;div.style.display='block';
+      div.style.backgroundColor=ok?'#d4edda':'#f8d7da';
+      div.style.color=ok?'#155724':'#721c24';
+      setTimeout(()=>div.style.display='none',5000);
     }
     function setLauncherStatus(state){
-      const ind  = document.getElementById('launcher-indicator');
-      const text = document.getElementById('launcher-status');
-      text.textContent = state;
-      ind.className    = 'indicator-light ' + (state==='歸位' ? 'green' : state==='發射' ? 'red' : 'yellow');
+      const ind=document.getElementById('launcher-indicator');
+      const txt=document.getElementById('launcher-status');
+      txt.textContent=state;
+      ind.className='indicator-light '+(state==='歸位'?'green':state==='發射'?'red':'yellow');
     }
-    function resetBtnStyles(){
-      ['up','down','left','right'].forEach(id => document.getElementById(id).classList.remove('active'));
-      lastActiveBtn = null;
-    }
+    function resetBtnStyles(){['up','down','left','right'].forEach(id=>document.getElementById(id).classList.remove('active'));lastActiveBtn=null;}
     function toggleCamera(){
-      thermalOn = !thermalOn;
-      document.getElementById('thermal-camera').style.display  = thermalOn ? 'block':'none';
-      document.getElementById('standard-camera').style.display = thermalOn ? 'none' :'block';
-      document.getElementById('camera-mode-label').textContent = thermalOn ? '熱成像攝影機' : '標準攝影機';
+      thermalOn=!thermalOn;
+      document.getElementById('thermal-camera').style.display = thermalOn?'block':'none';
+      document.getElementById('standard-camera').style.display= thermalOn?'none':'block';
+      document.getElementById('camera-mode-label').textContent = thermalOn?'熱成像攝影機':'標準攝影機';
     }
 
     /* ---------- 發射器 API ---------- */
     function resetLauncher(){
-      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/reset`,{method:'POST',headers:{'Content-Type':'application/json'}})
-        .then(r=>r.json()).then(d=>{
-          showServoStatus(d.message);
-          setLauncherStatus('歸位');
-          flashBtn('reset-btn');
-        }).catch(e=>{
-          console.error(e);showServoStatus('歸位失敗',false);
-        });
+      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/reset`,{method:'POST'})
+        .then(r=>r.json()).then(d=>{showServoStatus(d.message);setLauncherStatus('歸位');flashBtn('reset-btn');})
+        .catch(e=>{console.error(e);showServoStatus('歸位失敗',false);});
     }
     function launchLauncher(){
-      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/launch`,{method:'POST',headers:{'Content-Type':'application/json'}})
-        .then(r=>r.json()).then(d=>{
-          showServoStatus(d.message);
-          setLauncherStatus('發射');
-          flashBtn('launch-btn');
-        }).catch(e=>{
-          console.error(e);showServoStatus('發射失敗',false);
-        });
+      fetch(`${API_ENDPOINTS.SERVO_CONTROL}/launch`,{method:'POST'})
+        .then(r=>r.json()).then(d=>{showServoStatus(d.message);setLauncherStatus('發射');flashBtn('launch-btn');})
+        .catch(e=>{console.error(e);showServoStatus('發射失敗',false);});
     }
-    function flashBtn(id){
-      const btn=document.getElementById(id);
-      btn.style.opacity='.7';setTimeout(()=>btn.style.opacity='1',300);
-    }
+    function flashBtn(id){const btn=document.getElementById(id);btn.style.opacity='.7';setTimeout(()=>btn.style.opacity='1',300);}
 
-    /* ---------- 移動控制 ---------- */
-    function move(dir, btn){
-      if(lastActiveBtn===btn){ stop(); return; }
+    /* ---------- 移動 ---------- */
+    function move(dir,btn){
+      if(lastActiveBtn===btn){stop();return;}
       resetBtnStyles();
       switch(dir){
-        case 'up'   : twist.linear.x =  0.5; twist.angular.z = 0;   break;
-        case 'down' : twist.linear.x = -0.5; twist.angular.z = 0;   break;
-        case 'left' : twist.linear.x = 0;    twist.angular.z = 0.5; break;
-        case 'right': twist.linear.x = 0;    twist.angular.z =-0.5; break;
+        case'up':twist.linear.x=0.5;twist.angular.z=0;break;
+        case'down':twist.linear.x=-0.5;twist.angular.z=0;break;
+        case'left':twist.linear.x=0;twist.angular.z=0.5;break;
+        case'right':twist.linear.x=0;twist.angular.z=-0.5;break;
       }
-      cmdVel.publish(twist);
-      btn.classList.add('active'); lastActiveBtn = btn;
+      cmdVel.publish(twist);btn.classList.add('active');lastActiveBtn=btn;
     }
-    function stop(){
-      twist.linear.x = twist.angular.z = 0;
-      cmdVel.publish(twist);
-      resetBtnStyles();
-    }
+    function stop(){twist.linear.x=twist.angular.z=0;cmdVel.publish(twist);resetBtnStyles();}
 
-    /* ---------- 事件繫結 ---------- */
-    ['up','down','left','right'].forEach(id=>{
-      document.getElementById(id).addEventListener('click',()=>move(id,document.getElementById(id)));
-    });
-    document.getElementById('reset-btn' ).addEventListener('click', resetLauncher);
-    document.getElementById('launch-btn').addEventListener('click', launchLauncher);
-
-    /* --- 鍵盤 --- */
-    window.addEventListener('keydown',e=>{
-      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','1'].includes(e.key))e.preventDefault();
-    });
+    /* ---------- 事件 ---------- */
+    ['up','down','left','right'].forEach(id=>{document.getElementById(id).addEventListener('click',()=>move(id,document.getElementById(id)));});
+    document.getElementById('reset-btn').addEventListener('click',resetLauncher);
+    document.getElementById('launch-btn').addEventListener('click',launchLauncher);
+    window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','1'].includes(e.key))e.preventDefault();});
     document.addEventListener('keydown',e=>{
-      if(activeKey) return;
+      if(activeKey)return;
       switch(e.key){
-        case '1'        : toggleCamera(); break;
-        case 'ArrowUp'  : activeKey='ArrowUp';   move('up',   up);    break;
-        case 'ArrowDown': activeKey='ArrowDown'; move('down', down);  break;
-        case 'ArrowLeft': activeKey='ArrowLeft'; move('left', left);  break;
-        case 'ArrowRight':activeKey='ArrowRight';move('right',right); break;
-        case 'r': resetLauncher(); break;
-        case 'l': launchLauncher(); break;
+        case'1':toggleCamera();break;
+        case'ArrowUp':activeKey='ArrowUp';move('up',up);break;
+        case'ArrowDown':activeKey='ArrowDown';move('down',down);break;
+        case'ArrowLeft':activeKey='ArrowLeft';move('left',left);break;
+        case'ArrowRight':activeKey='ArrowRight';move('right',right);break;
+        case'r':resetLauncher();break;
+        case'l':launchLauncher();break;
       }
     });
-    document.addEventListener('keyup',e=>{
-      if(e.key===activeKey){ stop(); activeKey=null; }
-    });
+    document.addEventListener('keyup',e=>{if(e.key===activeKey){stop();activeKey=null;}});
 
-    /* ---------- 手動／自動切換 ---------- */
+    /* ---------- 手動／自動 ---------- */
     document.getElementById('toggle-btn').addEventListener('click',()=>{
-      manualControl = !manualControl;
+      manualControl=!manualControl;
       new ROSLIB.Topic({ros,name:'/manual_control',messageType:'std_msgs/Bool'})
         .publish(new ROSLIB.Message({data:manualControl}));
       const tBtn=document.getElementById('toggle-btn');
-      tBtn.textContent = manualControl ? '切換到自動導航' : '切換到手動控制';
-      tBtn.classList.toggle('manual-mode', manualControl);
+      tBtn.textContent=manualControl?'切換到自動導航':'切換到手動控制';
+      tBtn.classList.toggle('manual-mode',manualControl);
     });
 
-    /* ---------- ROS 資料訂閱 ---------- */
+    /* ---------- 訂閱 ---------- */
     flameDetection.subscribe(msg=>{
-      const ind = document.getElementById('flame-indicator');
-      const txt = document.getElementById('flame-status');
-      if(msg.data){
-        ind.className='indicator-light red';
-        txt.textContent='偵測到火焰!';
-        txt.style.color='#e74c3c'; txt.style.fontWeight='bold';
-      }else{
-        ind.className='indicator-light green';
-        txt.textContent='未偵測到火焰';
-        txt.style.color=''; txt.style.fontWeight='';
-      }
+      const ind=document.getElementById('flame-indicator');
+      const txt=document.getElementById('flame-status');
+      if(msg.data){ind.className='indicator-light red';txt.textContent='偵測到火焰!';txt.style.color='#e74c3c';txt.style.fontWeight='bold';}
+      else{ind.className='indicator-light green';txt.textContent='未偵測到火焰';txt.style.color='';txt.style.fontWeight='';}
     });
     thermalData.subscribe(msg=>{
       try{
         const data=JSON.parse(msg.data);
-        if(data.max_temp!==undefined)
-          document.getElementById('max-temp').textContent = data.max_temp.toFixed(1)+' °C';
-      }catch(err){ console.error('熱成像資料解析錯誤：',err); }
+        if(data.max_temp!==undefined){
+          const t=data.max_temp.toFixed(1)+' °C';
+          document.getElementById('max-temp').textContent        = t;
+          document.getElementById('max-temp-overlay').textContent='最高溫度：'+t;    // ★ 更新左上角
+        }
+      }catch(err){console.error('熱成像資料解析錯誤：',err);}
     });
 
     /* ---------- 初始化 ---------- */
