@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-# cam_stream_node.py – 2025-06-01 rev-C (改為熱像未接上仍可執行)
+# cam_stream_node.py – 2025-06-04 rev-D
+#
+# 1. 自動曝光 cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3)             ★
+# 2. 讀到每張影像時先做 convertScaleAbs(α=1.3, β=35) 提亮處理      ★
+# ----------------------------------------------------------------
 
 import rclpy, cv2, numpy as np, serial, time, threading, json
 from rclpy.node        import Node
@@ -9,13 +13,16 @@ from cv_bridge          import CvBridge
 from flask              import Flask, Response, render_template_string
 
 # =================== 硬體參數 ===================
-CAM_DEVICE      = "/dev/video0"
-THERMAL_SERIAL  = "/dev/ttyACM0"
-BAUD_RATE       = 115200
+CAM_DEVICE       = "/dev/video0"
+THERMAL_SERIAL   = "/dev/ttyACM0"
+BAUD_RATE        = 115200
 FRAME_W, FRAME_H = 1280, 720
-TEMP_THRESHOLD   = 40.0
-FIRE_HUE_RANGE   = [(0, 50)]
-BRIGHTNESS_MIN   = 5
+TEMP_THRESHOLD   = 40.0            # ℃，熱像高於此值才算熱點
+FIRE_HUE_RANGE   = [(0, 50)]       # HSV 色相 0-50 ≈ 紅橙黃色
+BRIGHTNESS_MIN   = 5               # 低於此平均亮度略過
+# ── 亮度增強係數 ── ★
+BRIGHT_ALPHA     = 1.30            # >1 增加對比
+BRIGHT_BETA      = 35              # +值 增加亮度
 # ===============================================
 
 # ---------- 共用影像 ----------
@@ -30,6 +37,10 @@ class SharedState:
         while self.running:
             ok, frm = self.cap.read()
             if ok:
+                # ★ 提亮 + 對比
+                frm = cv2.convertScaleAbs(frm,
+                                           alpha=BRIGHT_ALPHA,
+                                           beta=BRIGHT_BETA)
                 with self.lock:
                     self.frame = frm
             else:
@@ -39,8 +50,12 @@ class SharedState:
         with self.lock:
             return None if self.frame is None else self.frame.copy()
 
-# ---------- 熱像 & 火焰處理函式 ----------
+# ---------- 熱像 / 火焰處理 ----------
 def parse_temperatures(line: bytes):
+    """
+    將 Arduino 送出的 64 筆溫度字串轉為 (8,8) ndarray。
+    資料格式：'t0,t1,...,t63\\n'
+    """
     try:
         txt = line.decode(errors="ignore").strip()
         if txt.count(",") != 63:
@@ -50,17 +65,16 @@ def parse_temperatures(line: bytes):
         return None
 
 def get_color_fire_mask(frame_bgr):
-    hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+    hsv  = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
     mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
     for lo, hi in FIRE_HUE_RANGE:
         mask |= cv2.inRange(hsv, (lo, 100, 100), (hi, 255, 255))
     return mask
 
-# ---------- ROS2 節點 (發布影像) ----------
+# ---------- ROS2 影像發布 ----------
 class CamPublisher(Node):
     def __init__(self, shared: SharedState, fps: int = 30):
         super().__init__('camera_publisher')
-        self.declare_parameter('fps', fps)
         self.shared  = shared
         self.bridge  = CvBridge()
         self.pub_img = self.create_publisher(Image, '/image_raw', 10)
@@ -77,23 +91,23 @@ class CamPublisher(Node):
         self.shared.running = False
         super().destroy_node()
 
-# ---------- Flask Web App 建立函式 ----------
+# ---------- 建立 Flask Web App ----------
 def create_flask_app(shared: SharedState, thermal_pub):
     app = Flask(__name__)
 
-    # 嘗試開啟熱像序列埠；若失敗，就設定 ser=None，後續不做熱像處理
+    # 嘗試連接熱像序列埠；失敗則僅提供 Raw 畫面
     try:
         ser = serial.Serial(THERMAL_SERIAL, BAUD_RATE, timeout=1)
         thermal_available = True
-        print(f"[Flask] 成功連接到熱像序列埠: {THERMAL_SERIAL}")
+        print(f"[Flask] 成功連接熱像序列埠 {THERMAL_SERIAL}")
     except Exception as e:
         ser = None
         thermal_available = False
-        print(f"[Flask] 無法連接熱像序列埠 ({THERMAL_SERIAL})，後續僅提供 Raw 畫面: {e}")
+        print(f"[Flask] 熱像序列埠不可用：{e}")
 
     latest_max = {'val': None}
 
-    # ----- Raw Camera Stream -----
+    # ───── Raw Stream ─────
     def stream_raw():
         while True:
             frm = shared.get_frame()
@@ -101,113 +115,90 @@ def create_flask_app(shared: SharedState, thermal_pub):
                 time.sleep(0.01)
                 continue
             _, jpg = cv2.imencode('.jpg', frm)
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' +
+            yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' +
                    jpg.tobytes() + b'\r\n')
 
-    # ----- Thermal + Fire Detection Stream (當熱像可用) -----
+    # ───── Thermal Stream (如果熱像可用) ─────
     def stream_thermal_available():
         last_ok = time.time()
         while True:
             frm = shared.get_frame()
             if frm is None:
-                time.sleep(0.01)
-                continue
+                time.sleep(0.01); continue
 
             line = ser.readline()
             thermal = parse_temperatures(line)
             if thermal is None:
-                # 如果超過 2 秒都沒讀到正確資料，就清除緩衝
                 if time.time() - last_ok > 2:
-                    try:
-                        ser.reset_input_buffer()
-                    except Exception:
-                        pass
+                    try: ser.reset_input_buffer()
+                    except: pass
                     last_ok = time.time()
-                time.sleep(0.01)
-                continue
+                time.sleep(0.01); continue
 
-            last_ok = time.time()
-            max_t = float(np.max(thermal))
+            last_ok  = time.time()
+            max_t    = float(np.max(thermal))
             latest_max['val'] = max_t
 
             # 發布 ROS /thermal_data
             try:
-                thermal_pub.publish(String(data=json.dumps({'max_temp': max_t})))
+                thermal_pub.publish(String(data=json.dumps(
+                    {'max_temp': max_t})))
             except Exception:
-                pass  # 若 ROS2 尚未就緒，也不影響主流程
+                pass
 
-            # 將 8x8 熱像放大到 1280x720，並做標準化 + 上色
+            # 熱像放大 & 上色
             heat_big  = cv2.resize(thermal, (FRAME_W, FRAME_H),
                                    interpolation=cv2.INTER_CUBIC)
             heat_norm = cv2.normalize(heat_big, None, 0, 255, cv2.NORM_MINMAX)
             heat_clr  = cv2.applyColorMap(
                 heat_norm.astype(np.uint8), cv2.COLORMAP_JET)
 
-            # 溫度高於門檻產生二值掩模
+            # 門檻與色彩雙重口罩
             mask_temp  = (heat_big > TEMP_THRESHOLD).astype(np.uint8) * 255
-            # 色彩火焰掩模
             mask_color = get_color_fire_mask(frm)
             mask_fire  = cv2.bitwise_and(mask_temp, mask_color)
 
-            # 原始影像＆熱像疊圖
+            # 疊圖
             result = cv2.addWeighted(frm, 0.7, heat_clr, 0.3, 0)
 
-            # 找輪廓並畫出火焰框
+            # 畫火焰框
             cnts, _ = cv2.findContours(mask_fire, cv2.RETR_EXTERNAL,
                                        cv2.CHAIN_APPROX_SIMPLE)
             for c in cnts:
-                if cv2.contourArea(c) < 500:
-                    continue
+                if cv2.contourArea(c) < 500: continue
                 x, y, w, h = cv2.boundingRect(c)
-                cv2.rectangle(result, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                cv2.rectangle(result, (x,y), (x+w,y+h), (0,0,255), 2)
                 cv2.putText(result, 'Fire', (x, y-10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255), 2)
 
             _, jpg = cv2.imencode('.jpg', result)
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' +
+            yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' +
                    jpg.tobytes() + b'\r\n')
 
-    # ----- Thermal Stream（熱像不可用時，直接顯示 Raw 畫面） -----
+    # ───── Thermal Stream (熱像不可用) ─────
     def stream_thermal_unavailable():
         notice = np.zeros((FRAME_H, FRAME_W, 3), dtype=np.uint8)
         cv2.putText(notice, 'Thermal Device Not Found',
                     (50, FRAME_H//2), cv2.FONT_HERSHEY_SIMPLEX,
-                    2.0, (0, 0, 255), 3, cv2.LINE_AA)
+                    2.0, (0,0,255), 3, cv2.LINE_AA)
         _, notice_jpg = cv2.imencode('.jpg', notice)
-        notice_bytes = notice_jpg.tobytes()
+        notice_bytes  = notice_jpg.tobytes()
 
         while True:
-            frm = shared.get_frame()
-            if frm is None:
-                time.sleep(0.01)
-                continue
-
-            # 也可以選擇直接顯示原始影像：
-            # _, jpg = cv2.imencode('.jpg', frm)
-            # yield (b'--frame\r\n'
-            #        b'Content-Type: image/jpeg\r\n\r\n' +
-            #        jpg.tobytes() + b'\r\n')
-
-            # 這邊示範：顯示「裝置不存在」的靜態畫面
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' +
+            yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' +
                    notice_bytes + b'\r\n')
 
+    # ───── Routes ─────
     @app.route('/')
     def index():
         t = latest_max['val']
         show = f'{t:.1f} °C' if t is not None else 'N/A'
-        html = """
-          <h2>🔥 Fire Detection Stream</h2>
-          <p>熱成像目前偵測到的最高溫：<b>{{temp}}</b></p>
-          <ul>
-            <li><a href="/raw">Raw Camera Feed</a></li>
-            <li><a href="/thermal">Thermal Fire Detection</a></li>
-          </ul>
-        """
-        return render_template_string(html, temp=show)
+        return render_template_string(
+            "<h2>🔥 Fire Detection Stream</h2>"
+            "<p>最高溫：<b>{{temp}}</b></p>"
+            "<ul><li><a href='/raw'>Raw Camera Feed</a></li>"
+            "<li><a href='/thermal'>Thermal Fire Detection</a></li></ul>",
+            temp=show)
 
     @app.route('/raw')
     def raw_feed():
@@ -225,14 +216,16 @@ def create_flask_app(shared: SharedState, thermal_pub):
 
     return app
 
-# ---------- main 入口點 ----------
+# ---------- main ----------
 def main():
     cap = cv2.VideoCapture(CAM_DEVICE, cv2.CAP_V4L2)
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_W)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_H)
     cap.set(cv2.CAP_PROP_FPS, 30)
-    cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+    # ★ 自動曝光 (V4L2: 3 = Aperture Priority Auto)
+    cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3)
+
     if not cap.isOpened():
         raise RuntimeError(f'無法開啟相機 {CAM_DEVICE}')
 
@@ -241,13 +234,12 @@ def main():
 
     rclpy.init()
     ros_node    = CamPublisher(shared, fps=30)
-    # 如果熱像不可用，我們依然建立 thermal_pub，但後續 stream_thermal_unavailable 不會 publish
     thermal_pub = ros_node.create_publisher(String, '/thermal_data', 10)
 
     app = create_flask_app(shared, thermal_pub)
     threading.Thread(target=app.run,
-                     kwargs={'host':'0.0.0.0','port':5000,'debug':False,
-                             'use_reloader':False},
+                     kwargs={'host':'0.0.0.0', 'port':5000,
+                             'debug':False, 'use_reloader':False},
                      daemon=True).start()
 
     try:
