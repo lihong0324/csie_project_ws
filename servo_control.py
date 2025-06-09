@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 串列埠設定：請依照實際連接埠修改
-SERIAL_PORT = '/dev/cu.usbserial-10'  # Windows 用戶請改成 'COM3' 等
+SERIAL_PORT = '/dev/cu.usbmodem1101'  # Windows 用戶請改成 'COM3' 等
 BAUD_RATE = 115200
 
 # 初始化串列連線

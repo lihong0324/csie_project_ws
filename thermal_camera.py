@@ -1,146 +1,133 @@
-# fire_stream_cam_serial.py  – 2025-05-30
-# 可見光 ➜ USB 相機 (/dev/video1 等)        ← 改成你的相機裝置
-# 熱成像 ➜ Arduino 透過序列埠送 64 個溫度值   ← 改成你的序列埠
-
 from flask import Flask, Response, render_template_string
-import cv2, serial, time, numpy as np
+import serial, time, threading
+import numpy as np, cv2
 
 app = Flask(__name__)
 
-# ======== －－－「把這 3 行改成你的實際裝置」－－－ ========
-CAM_DEVICE      = "/dev/video0"   # USB 相機（/dev/video0、/dev/video1…）
-THERMAL_SERIAL  = "/dev/ttyACM0"  # Arduino 序列埠
-BAUD_RATE       = 115200
-# ===========================================================
+# === 硬體設定 ===
+SERIAL_PORT   = '/dev/tty.usbmodem1101'
+BAUD_RATE     = 115200
+TEMP_TH       = 35.0
+FIRE_HUE      = [(0,50)]     # HSV
+CAM_ID        = 1
+W,H           = 640,360      # 可再改回 1280,720
 
-FRAME_W, FRAME_H    = 1280, 720
-TEMP_THRESHOLD      = 40.0               # ℃，超過視為高溫
-FIRE_HUE_RANGE      = [(0, 50)]          # 火焰常見顏色 (HSV H 0-50°)
+# === Camera 初始化（低延遲） ===
+cap = cv2.VideoCapture(CAM_ID, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH , W)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
+cap.set(cv2.CAP_PROP_BUFFERSIZE , 1)
 
-# ---------- 相機 ----------
-cap = cv2.VideoCapture(CAM_DEVICE)       # 可直接給路徑
-if not cap.isOpened():
-    raise RuntimeError(f"[FATAL] 無法開啟相機 {CAM_DEVICE}")
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,  FRAME_W)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_H)
+# === Serial 背景讀執行緒 ===
+ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
+latest_thermal = np.zeros((8,8), np.float32)
 
-# ---------- 序列埠 ----------
-ser = serial.Serial(THERMAL_SERIAL, BAUD_RATE, timeout=1)
-
-# ---------- 共用狀態 ----------
-latest_max_temp = None   # 首頁顯示
-
-# ---------- 工具 ----------
-def parse_temperatures(line: bytes):
-    """將 64 個逗號分隔值 → 8×8 numpy.float32 陣列 (°C)。"""
+def parse_thermal(line: bytes):
     try:
-        txt = line.decode(errors="ignore").strip()
-        if txt.count(",") != 63:
-            return None
-        return np.fromstring(txt, sep=",", dtype=np.float32).reshape(8, 8)
-    except Exception as e:
-        print("[parse_temperatures]", e)
-        return None
+        txt = line.decode(errors='ignore').strip()
+        if txt.count(',') != 63: return None
+        return np.array(list(map(float, txt.split(','))), dtype=np.float32).reshape(8,8)
+    except: return None
 
-def get_color_fire_mask(frame_bgr):
-    hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
-    mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
-    for lo, hi in FIRE_HUE_RANGE:
-        mask |= cv2.inRange(hsv, (lo, 100, 100), (hi, 255, 255))
+def serial_loop():
+    global latest_thermal
+    while True:
+        line = ser.readline()
+        th = parse_thermal(line)
+        if th is not None:
+            latest_thermal = th
+
+thr = threading.Thread(target=serial_loop, daemon=True)
+thr.start()
+
+kernel = np.ones((7,7), np.uint8)
+def get_fire_mask_color(img):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    mask = np.zeros(hsv.shape[:2], np.uint8)
+    for lo,hi in FIRE_HUE:
+        mask |= cv2.inRange(hsv, (lo, 80, 80), (hi,255,255))
     return mask
 
-# ---------- 影像產生 ----------
-def stream_raw():
+latest_max, latest_fire = None, False
+
+# --- 原始影像 ---
+def generate_raw():
     while True:
-        ok, frame = cap.read()
-        if not ok:
-            continue
-        _, jpg = cv2.imencode(".jpg", frame)
-        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpg.tobytes() + b"\r\n"
+        _ = cap.grab()
+        ok, frame = cap.retrieve()
+        if not ok: continue
+        ok, jpg = cv2.imencode('.jpg', frame)
+        if ok:
+            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpg.tobytes() + b'\r\n'
 
-def stream_thermal():
-    global latest_max_temp
-    last_ok = time.time()
+# --- 熱成像融合 ---
+def generate_thermal():
+    global latest_max, latest_fire
     while True:
-        try:
-            ok, frame = cap.read()
-            if not ok:
-                continue
+        _ = cap.grab()
+        ok, frame = cap.retrieve()
+        if not ok: continue
 
-            line = ser.readline()
-            if not line:
-                continue
-            thermal = parse_temperatures(line)
-            if thermal is None:
-                continue
-            last_ok = time.time()
+        thermal = latest_thermal
+        max_t   = float(np.max(thermal)); latest_max = max_t
 
-            # 1. 最高溫
-            max_t = float(np.max(thermal))
-            latest_max_temp = max_t
+        heat = cv2.resize(thermal, (W,H), cv2.INTER_CUBIC)
+        mask_hot = (heat > TEMP_TH).astype(np.uint8)*255
+        mask_col = get_fire_mask_color(frame)
+        mask_and = cv2.bitwise_and(mask_hot, mask_col)
+        mask_and = cv2.dilate(mask_and, kernel, iterations=1)
 
-            # 2. 把熱像圖放大到相機解析度並上色
-            heat_img   = cv2.resize(
-                thermal, (FRAME_W, FRAME_H), interpolation=cv2.INTER_CUBIC
-            )
-            heat_norm  = cv2.normalize(heat_img, None, 0, 255, cv2.NORM_MINMAX)
-            heat_color = cv2.applyColorMap(heat_norm.astype(np.uint8),
-                                           cv2.COLORMAP_JET)
+        has_fire = cv2.countNonZero(mask_and) > 200
+        latest_fire = has_fire
 
-            # 3. 高溫遮罩 + 火焰顏色遮罩
-            mask_temp  = (heat_img > TEMP_THRESHOLD).astype(np.uint8) * 255
-            mask_color = get_color_fire_mask(frame)
-            mask_fire  = cv2.bitwise_and(mask_temp, mask_color)
+        heat_vis = cv2.applyColorMap(
+            cv2.normalize(heat, None, 0,255, cv2.NORM_MINMAX).astype(np.uint8),
+            cv2.COLORMAP_JET)
+        out = cv2.addWeighted(frame, 0.7, heat_vis, 0.3, 0)
 
-            # 4. 疊圖
-            result = cv2.addWeighted(frame, 0.7, heat_color, 0.3, 0)
+        for c in cv2.findContours(mask_and, cv2.RETR_EXTERNAL,
+                                  cv2.CHAIN_APPROX_SIMPLE)[0]:
+            if cv2.contourArea(c) > 800:
+                x,y,w,h_ = cv2.boundingRect(c)
+                cv2.rectangle(out,(x,y),(x+w,y+h_),(0,0,255),2)
+                cv2.putText(out,"Fire",(x,y-8),cv2.FONT_HERSHEY_SIMPLEX,
+                            0.7,(0,0,255),2)
 
-            # 5. 畫火焰框
-            for cnt in cv2.findContours(mask_fire, cv2.RETR_EXTERNAL,
-                                        cv2.CHAIN_APPROX_SIMPLE)[0]:
-                if cv2.contourArea(cnt) < 500:
-                    continue
-                x, y, w, h = cv2.boundingRect(cnt)
-                cv2.rectangle(result, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                cv2.putText(result, "Fire", (x, y - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        cv2.putText(out, f"Max {max_t:.1f} C", (10,25),
+                    cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),2)
+        cv2.putText(out, f"Fire: {'YES' if has_fire else 'NO'}", (10,50),
+                    cv2.FONT_HERSHEY_SIMPLEX,0.7,
+                    (0,0,255) if has_fire else (180,180,180),2)
 
-            # 6. 浮水印最高溫
-            cv2.putText(result, f"Max Temp: {max_t:.1f}C", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        ok,jpg = cv2.imencode('.jpg', out)
+        if ok:
+            yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n'
+                   + jpg.tobytes() + b'\r\n')
 
-            _, jpg = cv2.imencode(".jpg", result)
-            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpg.tobytes() + b"\r\n"
-
-        except Exception as e:
-            print("[stream_thermal]", e)
-
-        # 若 2 秒無有效資料 → 重設序列埠
-        if time.time() - last_ok > 2:
-            ser.reset_input_buffer()
-            last_ok = time.time()
-
-# ---------- Flask ----------
-@app.route("/")
-def index():
-    temp = f"{latest_max_temp:.1f} °C" if latest_max_temp is not None else "N/A"
-    html = """
-      <h2>🔥 Fire Detection Stream</h2>
-      <p>熱成像目前偵測到的最高溫：<b>{{temp}}</b></p>
+# === Flask Routes ===
+@app.route('/')
+def idx():
+    t = f"{latest_max:.1f} °C" if latest_max else "N/A"
+    f = "<span style='color:red;font-weight:bold'>YES</span>" if latest_fire \
+        else "<span style='color:gray'>NO</span>"
+    return render_template_string('''
+      <h2>🔥 Fire Detection – Low-Latency</h2>
+      最高溫：<b>{{T}}</b><br>偵測火焰：{{F}}<br><br>
       <ul>
-        <li><a href="/raw">Raw Camera Feed</a></li>
-        <li><a href="/thermal">Thermal Fire Detection</a></li>
+        <li><a href="/raw">原始影像</a></li>
+        <li><a href="/thermal">熱成像疊圖</a></li>
       </ul>
-    """
-    return render_template_string(html, temp=temp)
+    ''', T=t, F=f)
 
-@app.route("/raw")
-def raw_feed():
-    return Response(stream_raw(), mimetype="multipart/x-mixed-replace; boundary=frame")
+@app.route('/raw')
+def raw():
+    return Response(generate_raw(),
+        mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route("/thermal")
-def thermal_feed():
-    return Response(stream_thermal(), mimetype="multipart/x-mixed-replace; boundary=frame")
+@app.route('/thermal')
+def thermal():
+    return Response(generate_thermal(),
+        mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)
