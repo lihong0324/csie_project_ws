@@ -17,10 +17,16 @@
     .camera-label,.view-toggle-hint,.temp-overlay{position:absolute;background:rgba(0,0,0,.7);color:#fff;padding:5px 10px;border-radius:5px;font-size:14px;z-index:10}
     .camera-label{top:10px;right:10px;left:auto}
     .view-toggle-hint{bottom:10px;right:10px}
-    .temp-overlay{top:10px;left:10px}          /* ★ 新增：左上角溫度 */
+    .temp-overlay{top:10px;left:10px}          /* ★ 左上角溫度 */
     #main-camera-view{position:relative;width:640px;height:360px}
     #standard-camera,#thermal-camera{width:100%;height:100%;position:absolute;top:0;left:0}
     #thermal-camera{display:none}
+
+    /* === 中心準心 (紅十字) === */
+    .crosshair{position:absolute;top:50%;left:50%;width:40px;height:40px;transform:translate(-50%,-50%);pointer-events:none;display:none;z-index:15}
+    .crosshair::before,.crosshair::after{content:"";position:absolute;background:red;}
+    .crosshair::before{width:2px;height:40px;left:50%;top:0;transform:translateX(-50%);} /* 垂直線 */
+    .crosshair::after{height:2px;width:40px;top:50%;left:0;transform:translateY(-50%);} /* 水平線 */
 
     /* === 方向鍵控制區 === */
     #control-panel{display:grid;grid-template-columns:repeat(3,100px);grid-template-rows:repeat(3,100px);gap:10px;justify-items:center;align-items:center;margin-bottom:20px}
@@ -52,10 +58,13 @@
     <!-- ===== 攝影機畫面 ===== -->
     <div class="camera-container">
       <div class="camera-feed">
-        <div id="max-temp-overlay" class="temp-overlay">最高溫度：0 °C</div> <!-- ★ 新增 -->
+        <div id="max-temp-overlay" class="temp-overlay">最高溫度：0 °C</div>
         <div id="camera-mode-label" class="camera-label">標準攝影機</div>
-        <div class="view-toggle-hint">按 「1」 鍵切換熱成像</div>
+        <div class="view-toggle-hint">按 「1」 鍵切換熱成像<br>按 「2」 鍵顯示準心</div>
         <div id="main-camera-view">
+          <!-- 準心 -->
+          <div id="crosshair" class="crosshair"></div>
+          <!-- 攝影機影像 -->
           <img id="standard-camera" src="" alt="機器人視角" />
           <img id="thermal-camera"  src="" alt="熱成像視角" />
         </div>
@@ -138,7 +147,8 @@
     const thermalData    = new ROSLIB.Topic({ ros, name:'/thermal_data',    messageType:'std_msgs/String' });
 
     /* ---------- UI 狀態 ---------- */
-    let manualControl=false,lastActiveBtn=null,activeKey=null,thermalOn=false;
+    let manualControl=false,lastActiveBtn=null,activeKey=null,thermalOn=false,crosshairVisible=false;
+    const crosshairDiv=document.getElementById('crosshair');
 
     /* ---------- 工具函式 ---------- */
     function showServoStatus(msg, ok=true){
@@ -160,6 +170,14 @@
       document.getElementById('thermal-camera').style.display = thermalOn?'block':'none';
       document.getElementById('standard-camera').style.display= thermalOn?'none':'block';
       document.getElementById('camera-mode-label').textContent = thermalOn?'熱成像攝影機':'標準攝影機';
+      // 熱成像時隱藏準心，避免誤蓋文字
+      if(thermalOn) { crosshairVisible=false; crosshairDiv.style.display='none'; }
+    }
+    function toggleCrosshair(){
+      // 確保使用標準攝影機
+      if(thermalOn) toggleCamera();
+      crosshairVisible=!crosshairVisible;
+      crosshairDiv.style.display=crosshairVisible?'block':'none';
     }
 
     /* ---------- 發射器 API ---------- */
@@ -193,11 +211,12 @@
     ['up','down','left','right'].forEach(id=>{document.getElementById(id).addEventListener('click',()=>move(id,document.getElementById(id)));});
     document.getElementById('reset-btn').addEventListener('click',resetLauncher);
     document.getElementById('launch-btn').addEventListener('click',launchLauncher);
-    window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','1'].includes(e.key))e.preventDefault();});
+    window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','1','2'].includes(e.key))e.preventDefault();});
     document.addEventListener('keydown',e=>{
       if(activeKey)return;
       switch(e.key){
         case'1':toggleCamera();break;
+        case'2':toggleCrosshair();break;
         case'ArrowUp':activeKey='ArrowUp';move('up',up);break;
         case'ArrowDown':activeKey='ArrowDown';move('down',down);break;
         case'ArrowLeft':activeKey='ArrowLeft';move('left',left);break;
@@ -231,9 +250,9 @@
         if(data.max_temp!==undefined){
           const t=data.max_temp.toFixed(1)+' °C';
           document.getElementById('max-temp').textContent        = t;
-          document.getElementById('max-temp-overlay').textContent='最高溫度：'+t;    // ★ 更新左上角
+          document.getElementById('max-temp-overlay').textContent='最高溫度：'+t;    // 更新左上角
         }
-      }catch(err){console.error('熱成像資料解析錯誤：',err);}
+      }catch(err){console.error('熱成像資料解析錯誤：',err);}  
     });
 
     /* ---------- 初始化 ---------- */
